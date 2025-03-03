@@ -1,1 +1,17 @@
 Describes the data directory and datasets
+
+- [Welcome to the MET Weather API](https://api.met.no/)
+	- [Frost API](https://frost.met.no/index.html) med mer info: [Weather and Climate Elements](https://frost.met.no/elementtable)
+	- [Locationforecast](https://api.met.no/weatherapi/locationforecast/2.0/documentation)
+- [Global Carbon Atlas](https://globalcarbonatlas.org/)
+	- [Carbon Emissions - Global Carbon Atlas](https://globalcarbonatlas.org/emissions/carbon-emissions/)
+	- [Nitrous oxide Emissions - Global Carbon Atlas](https://globalcarbonatlas.org/emissions/nitrous-oxide-emissions/)
+- [CO₂ and Greenhouse Gas Emissions - Our World in Data](https://ourworldindata.org/co2-and-greenhouse-gas-emissions)
+- [Our World in Data](https://ourworldindata.org/)
+	- [Air pollution - Our World in Data](https://ourworldindata.org/grapher/air-pollution-london-vs-delhi?time=1700..latest)
+	- [Air Pollution Data Explorer - Our World in Data](https://ourworldindata.org/explorers/air-pollution?country=~NOR&Pollutant=All+pollutants&Sector=All+sectors+%28total%29&Per+capita=false)
+- [Forside - data.norge.no](https://data.norge.no)
+	- [Målestasjoner for luftkvalitet i Norge  - miljodirektoratet.no](https://www.miljodirektoratet.no/tjenester/malestasjoner-for-luftkvalitet-i-norge/?kommune=5001)
+	- [Luftkvalitet i Norge](https://luftkvalitet.miljodirektoratet.no/artikkel/artikler/apne-data-og-statistikk/#M_ledata_for_lokal_luftkvalitet)
+	- [Historical data \| NILU – Norwegian Institute for Air Research](https://luftkvalitet.nilu.no/en/historical) eller bruke api [Luftkvalitet API](https://api.nilu.no/docs/)
+	- [Utslipp til luft  –  SSB](https://www.ssb.no/natur-og-miljo/forurensning-og-klima/statistikk/utslipp-til-luft)

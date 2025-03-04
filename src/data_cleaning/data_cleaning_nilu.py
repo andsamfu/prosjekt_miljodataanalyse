@@ -1,0 +1,62 @@
+import pandas as pd
+import json
+import os
+
+# Definer prosjektets rotkatalog
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Filsti til JSON-filen
+json_file = os.path.join(project_root, 'data', 'raw', 'raw_api_nilu_air_quality_trondheim_2009_to_2024.json')
+
+# Les JSON-filen
+try:
+    with open(json_file, 'r') as file:
+        data = json.load(file)
+    print("JSON-filen ble lastet vellykket.")
+except Exception as e:
+    print(f"Feil ved lesing av JSON-filen: {e}")
+    exit()
+
+# Konverter JSON-data til en Pandas DataFrame
+df = pd.json_normalize(data, 'values')
+
+# Utfør grunnleggende valideringer
+print("Antall rader i datasettet:", len(df))
+print("Kolonner i datasettet:", df.columns.tolist())
+print("Datatyper for hver kolonne:\n", df.dtypes)
+
+# Sjekk for manglende verdier
+missing_values = df.isnull().sum()
+print("Manglende verdier i hver kolonne:\n", missing_values)
+
+# Fyll inn manglende verdier i 'value' kolonnen med gjennomsnittet
+df['value'].fillna(df['value'].mean(), inplace=True)
+
+# Rund av verdiene til maks 2 desimaler
+df['value'] = df['value'].round(2)
+df['coverage'] = df['coverage'].round(2)
+
+# Sjekk for duplikater
+duplicates = df.duplicated().sum()
+print("Antall duplikater i datasettet:", duplicates)
+
+# Vis de første radene i datasettet
+print("De første radene i datasettet:\n", df.head())
+
+# Utfør spesifikke valideringer for hver kolonne
+print("Statistikk for 'value':\n", df['value'].describe())
+print("Statistikk for 'coverage':\n", df['coverage'].describe())
+
+# Sjekk for uvanlige verdier (f.eks. negative verdier for 'value')
+unusual_values = df[df['value'] < 0]
+print("Rader med negative verdier for 'value':\n", unusual_values)
+
+# Opprett katalogen hvis den ikke eksisterer
+cleaned_dir = os.path.join(project_root, 'data', 'clean')
+if not os.path.exists(cleaned_dir):
+    os.makedirs(cleaned_dir)
+
+# Lagre den rensede dataen i en ny JSON-fil
+cleaned_json_file = os.path.join(cleaned_dir, 'cleaned_api_nilu_air_quality_trondheim_2009_to_2024.json')
+df.to_json(cleaned_json_file, orient='records', lines=True)
+print(f"Renset data lagret i '{cleaned_json_file}'")

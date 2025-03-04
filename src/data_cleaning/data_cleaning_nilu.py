@@ -31,9 +31,9 @@ print("Manglende verdier i hver kolonne:\n", missing_values)
 # Fyll inn manglende verdier i 'value' kolonnen med interpolasjon
 df['value'] = df['value'].interpolate(method='linear')
 
-# Rund av verdiene til maks 2 desimaler
-df['value'] = df['value'].round(2)
-df['coverage'] = df['coverage'].round(2)
+# Rund av verdiene til maks 4 desimaler
+df['value'] = df['value'].round(4)
+df['coverage'] = df['coverage'].round(4)
 
 # Sjekk for duplikater
 duplicates = df.duplicated().sum()

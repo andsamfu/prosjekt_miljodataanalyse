@@ -108,8 +108,8 @@ fig.update_layout(
             {
                 'label': 'Måned',
                 'method': 'update',
-                'args': [{'x': [resample_data(df, 'M').index, resample_data(df, 'M').index, resample_data(df, 'M').index],
-                           'y': [resample_data(df, 'M')['mean_air_temperature'], resample_data(df, 'M')['total_precipitation'], resample_data(df, 'M')['mean_wind_speed']]}
+                'args': [{'x': [resample_data(df, 'ME').index, resample_data(df, 'ME').index, resample_data(df, 'ME').index],
+                           'y': [resample_data(df, 'ME')['mean_air_temperature'], resample_data(df, 'ME')['total_precipitation'], resample_data(df, 'ME')['mean_wind_speed']]}
                 ]
             }
         ]

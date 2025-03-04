@@ -12,7 +12,7 @@ json_file = os.path.join(project_root, 'data', 'raw', 'raw_api_nilu_air_quality_
 try:
     with open(json_file, 'r') as file:
         data = json.load(file)
-    print("JSON-filen ble lastet vellykket.")
+    print("\nJSON-filen ble lastet vellykket.\n")
 except Exception as e:
     print(f"Feil ved lesing av JSON-filen: {e}")
     exit()
@@ -26,16 +26,14 @@ df['dateTime'] = pd.to_datetime(df['dateTime'])
 # Sett 'dateTime' som indeks
 df.set_index('dateTime', inplace=True)
 
+# Fjern 'coverage' kolonnen
+df.drop(columns=['coverage'], inplace=True)
+
 # Fjern duplikate etiketter i indeksen
 df = df[~df.index.duplicated(keep='first')]
 
 # Vier informasjon om datasettet i sin helhet
-print("Antall rader i datasettet:", len(df))
-print("Kolonner i datasettet:", df.columns.tolist())
-
-# Sjekk for manglende verdier
-missing_values = df.isnull().sum()
-print("Manglende verdier i hver kolonne før fiksing:\n", missing_values)
+print("Antall rader i datasettet:", len(df),"\n")
 
 # Identifiser start- og sluttdato
 start_date = df.index.min()
@@ -49,7 +47,7 @@ df = df.reindex(all_dates)
 
 # Sjekk antall manglende dager
 missing_days = df.isnull().sum().max()
-print(f"Antall manglende dager i datasettet: {missing_days}")
+print(f"Antall manglende dager i datasettet: {missing_days}\n")
 
 # Fyll inn manglende verdier i 'value' kolonnen med interpolasjon
 df['value'] = df['value'].interpolate(method='linear')
@@ -59,24 +57,21 @@ df['value'] = df['value'].round(4)
 
 # Sjekk for duplikater
 duplicates = df.duplicated().sum()
-print("Antall duplikater i datasettet:", duplicates)
+print("Antall duplikater i datasettet:", duplicates, "\n")
 
 # Fjern duplikater
 df.drop_duplicates(inplace=True)
 
 # Sjekk for uvanlige verdier (f.eks. negative verdier for 'value')
 unusual_values = df[df['value'] < 0]
-print("Rader med negative verdier for 'value':\n", unusual_values)
+print("Rader med negative verdier for 'value':\n", unusual_values, "\n")
 
 # Endre negative verdier til null
 df.loc[df['value'] < 0, 'value'] = 0
 
 # Bekreft at negative verdier er fikset
 fixed_values = df[df['value'] == 0]
-print("Rader med negative verdier er nå fikset:\n", fixed_values)
-
-# Fjern 'coverage' kolonnen
-df.drop(columns=['coverage'], inplace=True)
+print("Rader med negative verdier er nå fikset!\n")
 
 # Definer stien til katalogen for rensede data
 cleaned_dir = os.path.join(project_root, 'data', 'clean')

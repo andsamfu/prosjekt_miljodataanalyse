@@ -43,8 +43,15 @@ end_date = df_pivot.index.max()
 all_dates = pd.date_range(start=start_date, end=end_date, freq='D')
 df_pivot = df_pivot.reindex(all_dates)
 
+# Lag en kopi av DataFrame før interpolasjon for å sammenligne senere
+df_before_interpolation = df_pivot.copy()
+
 # Fyll inn manglende verdier med interpolasjon
 df_pivot = df_pivot.interpolate(method='linear')
+
+# Lag en kolonne som indikerer hvilke verdier som er interpolert
+for column in df_pivot.columns:
+    df_pivot[f'interpolated_{column}'] = df_before_interpolation[column].isna() & df_pivot[column].notna()
 
 # Rund av verdiene til maks 4 desimaler
 df_pivot = df_pivot.round(4)

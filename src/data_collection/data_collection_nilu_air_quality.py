@@ -4,7 +4,7 @@ import json
 # Koordinater for Trondheim
 latitude = 63.43038
 longitude = 10.39355
-radius = 1  # Radius i kilometer
+radius = 1  # Radius i kilometer for å få Torvet i Trondheim
 
 # Definerer tidsperioden for 2009 til 2024 (er ikke mer data enn dette)
 fromtime = "2009-01-01"

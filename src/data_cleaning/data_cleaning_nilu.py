@@ -56,7 +56,6 @@ df['value'] = df['value'].interpolate(method='linear')
 
 # Rund av verdiene til maks 4 desimaler
 df['value'] = df['value'].round(4)
-df['coverage'] = df['coverage'].round(4)
 
 # Sjekk for duplikater
 duplicates = df.duplicated().sum()
@@ -75,6 +74,9 @@ df.loc[df['value'] < 0, 'value'] = 0
 # Bekreft at negative verdier er fikset
 fixed_values = df[df['value'] == 0]
 print("Rader med negative verdier er nå fikset:\n", fixed_values)
+
+# Fjern 'coverage' kolonnen
+df.drop(columns=['coverage'], inplace=True)
 
 # Definer stien til katalogen for rensede data
 cleaned_dir = os.path.join(project_root, 'data', 'clean')

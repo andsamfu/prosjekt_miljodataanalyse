@@ -67,7 +67,7 @@ result = ps.sqldf(query, locals())
 print(result)
 
 # Lagre resultatet i en SQLite-database
-database_file = 'data/raw/raw_frost_weather_trondheim_2010_to_2019.db'
+database_file = 'data/raw/raw_api_frost_weather_trondheim_2010_to_2019.db'
 conn = sqlite3.connect(database_file)
 result.to_sql('weather_data', conn, if_exists='replace', index=False)
 conn.close()

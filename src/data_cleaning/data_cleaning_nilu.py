@@ -20,7 +20,7 @@ except Exception as e:
 # Konverter JSON-data til en Pandas DataFrame
 df = pd.json_normalize(data, 'values')
 
-# Utfør grunnleggende valideringer
+# Vier informasjon om datasettet i sin helhet
 print("Antall rader i datasettet:", len(df))
 print("Kolonner i datasettet:", df.columns.tolist())
 print("Datatyper for hver kolonne:\n", df.dtypes)
@@ -29,8 +29,8 @@ print("Datatyper for hver kolonne:\n", df.dtypes)
 missing_values = df.isnull().sum()
 print("Manglende verdier i hver kolonne:\n", missing_values)
 
-# Fyll inn manglende verdier i 'value' kolonnen med gjennomsnittet
-df['value'].fillna(df['value'].mean(), inplace=True)
+# Fyll inn manglende verdier i 'value' kolonnen med interpolasjon
+df['value'].interpolate(method='linear', inplace=True)
 
 # Rund av verdiene til maks 2 desimaler
 df['value'] = df['value'].round(2)

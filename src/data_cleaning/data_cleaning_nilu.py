@@ -79,10 +79,11 @@ print("Rader med negative verdier er nå fikset:\n", fixed_values)
 # Definer stien til katalogen for rensede data
 cleaned_dir = os.path.join(project_root, 'data', 'clean')
 
-# Lagre den rensede dataen i en ny JSON-fil med datoer inkludert
+# Lagre den rensede dataen i en ny JSON-fil med lesbare datoer inkludert
 cleaned_json_file = os.path.join(cleaned_dir, 'cleaned_data_nilu.json')
 df.reset_index(inplace=True)
 df.rename(columns={'index': 'dateTime'}, inplace=True)
+df['dateTime'] = df['dateTime'].dt.strftime('%Y-%m-%d')
 df.to_json(cleaned_json_file, orient='records', lines=True)
 print(f"Renset data lagret i '{cleaned_json_file}'")
 

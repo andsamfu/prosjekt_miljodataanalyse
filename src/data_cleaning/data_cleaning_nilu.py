@@ -64,11 +64,23 @@ df_pivot = df_pivot[~df_pivot.index.duplicated(keep='first')]
 negative_values_before = (df_pivot < 0).sum().sum()
 df_pivot[df_pivot < 0] = 0
 
+# Tell antall genererte verdier for hver kolonne
+generated_NO2 = df_pivot['generated_NO2'].sum()
+generated_PM10 = df_pivot['generated_PM10'].sum()
+generated_PM2_5 = df_pivot['generated_PM2.5'].sum()
+
+# Beregn total antall genererte verdier
+total_generated = generated_NO2 + generated_PM10 + generated_PM2_5
+
 # Print informasjon om datasettet
 print(f"Antall rader i datasettet: {len(df_pivot)}")
-print(f"Antall genererte verdier pga. mangel av verdi: {df_pivot.filter(like='generated_').sum().sum()}")
-print(f"Antall duplikater før rensing: {duplicates_before}")
-print(f"Antall negative verdier før rensing: {negative_values_before}\n")
+print(f"Antall genererte verdier:")
+print(f"  NO2: {generated_NO2}")
+print(f"  PM10: {generated_PM10}")
+print(f"  PM2.5: {generated_PM2_5}")
+print(f"Totalt antall genererte verdier: {total_generated}")
+print(f"Antall duplikater før fjerning: {duplicates_before}")
+print(f"Antall negative verdier før fjerning: {negative_values_before}")
 
 # Reset index for å inkludere datoene som en kolonne
 df_pivot.reset_index(inplace=True)

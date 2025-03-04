@@ -42,20 +42,17 @@ fig.update_layout(
                 {
                     'label': 'Temperatur',
                     'method': 'update',
-                    'args': [{'visible': [True, False, False]},
-                              {'title': 'Temperatur (Daglig)'}]
+                    'args': [{'visible': [True, False, False]}]
                 },
                 {
                     'label': 'Nedbør',
                     'method': 'update',
-                    'args': [{'visible': [False, True, False]},
-                              {'title': 'Nedbør (Daglig)'}]
+                    'args': [{'visible': [False, True, False]}]
                 },
                 {
                     'label': 'Vindhastighet',
                     'method': 'update',
-                    'args': [{'visible': [False, False, True]},
-                              {'title': 'Vindhastighet (Daglig)'}]
+                    'args': [{'visible': [False, False, True]}]
                 }
             ],
             'direction': 'right',  # Endret til horisontal
@@ -98,22 +95,22 @@ fig.update_layout(
                 'label': 'Dag',
                 'method': 'update',
                 'args': [{'x': [df.index, df.index, df.index],
-                           'y': [df['mean_air_temperature'], df['total_precipitation'], df['mean_wind_speed']]},
-                          {'title': 'Temperatur (Daglig)'}]
+                           'y': [df['mean_air_temperature'], df['total_precipitation'], df['mean_wind_speed']]}
+                ]
             },
             {
                 'label': 'Uke',
                 'method': 'update',
                 'args': [{'x': [resample_data(df, 'W').index, resample_data(df, 'W').index, resample_data(df, 'W').index],
-                           'y': [resample_data(df, 'W')['mean_air_temperature'], resample_data(df, 'W')['total_precipitation'], resample_data(df, 'W')['mean_wind_speed']]},
-                          {'title': 'Temperatur (Ukentlig)'}]
+                           'y': [resample_data(df, 'W')['mean_air_temperature'], resample_data(df, 'W')['total_precipitation'], resample_data(df, 'W')['mean_wind_speed']]}
+                ]
             },
             {
                 'label': 'Måned',
                 'method': 'update',
-                'args': [{'x': [resample_data(df, 'ME').index, resample_data(df, 'ME').index, resample_data(df, 'ME').index],
-                           'y': [resample_data(df, 'ME')['mean_air_temperature'], resample_data(df, 'ME')['total_precipitation'], resample_data(df, 'ME')['mean_wind_speed']]},
-                          {'title': 'Temperatur (Månedlig)'}]
+                'args': [{'x': [resample_data(df, 'M').index, resample_data(df, 'M').index, resample_data(df, 'M').index],
+                           'y': [resample_data(df, 'M')['mean_air_temperature'], resample_data(df, 'M')['total_precipitation'], resample_data(df, 'M')['mean_wind_speed']]}
+                ]
             }
         ]
     }]
@@ -124,3 +121,4 @@ fig.update_layout(title='Værdata i Trondheim (2010-2019)', xaxis_title='Dato', 
 
 # Vis grafen
 fig.show()
+

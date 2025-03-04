@@ -51,16 +51,24 @@ df_pivot = df_pivot.interpolate(method='linear')
 
 # Lag en kolonne som indikerer hvilke verdier som er interpolert
 for column in df_pivot.columns:
-    df_pivot[f'interpolated_{column}'] = df_before_interpolation[column].isna() & df_pivot[column].notna()
+    df_pivot[f'generated_{column}'] = df_before_interpolation[column].isna() & df_pivot[column].notna()
 
 # Rund av verdiene til maks 4 desimaler
 df_pivot = df_pivot.round(4)
 
 # Fjern duplikater
+duplicates_before = df_pivot.index.duplicated(keep='first').sum()
 df_pivot = df_pivot[~df_pivot.index.duplicated(keep='first')]
 
 # Sjekk for uvanlige verdier (f.eks. negative verdier) og sett dem til null
+negative_values_before = (df_pivot < 0).sum().sum()
 df_pivot[df_pivot < 0] = 0
+
+# Print informasjon om datasettet
+print(f"Antall rader i datasettet: {len(df_pivot)}")
+print(f"Antall genererte verdier pga. mangel av verdi: {df_pivot.filter(like='generated_').sum().sum()}")
+print(f"Antall duplikater før rensing: {duplicates_before}")
+print(f"Antall negative verdier før rensing: {negative_values_before}\n")
 
 # Reset index for å inkludere datoene som en kolonne
 df_pivot.reset_index(inplace=True)

@@ -23,14 +23,13 @@ df = pd.json_normalize(data, 'values')
 # Vier informasjon om datasettet i sin helhet
 print("Antall rader i datasettet:", len(df))
 print("Kolonner i datasettet:", df.columns.tolist())
-print("Datatyper for hver kolonne:\n", df.dtypes)
 
 # Sjekk for manglende verdier
 missing_values = df.isnull().sum()
 print("Manglende verdier i hver kolonne:\n", missing_values)
 
 # Fyll inn manglende verdier i 'value' kolonnen med interpolasjon
-df['value'].interpolate(method='linear', inplace=True)
+df['value'] = df['value'].interpolate(method='linear')
 
 # Rund av verdiene til maks 2 desimaler
 df['value'] = df['value'].round(2)
@@ -40,23 +39,25 @@ df['coverage'] = df['coverage'].round(2)
 duplicates = df.duplicated().sum()
 print("Antall duplikater i datasettet:", duplicates)
 
-# Vis de første radene i datasettet
-print("De første radene i datasettet:\n", df.head())
-
-# Utfør spesifikke valideringer for hver kolonne
-print("Statistikk for 'value':\n", df['value'].describe())
-print("Statistikk for 'coverage':\n", df['coverage'].describe())
+# Fjern duplikater
+df.drop_duplicates(inplace=True)
 
 # Sjekk for uvanlige verdier (f.eks. negative verdier for 'value')
 unusual_values = df[df['value'] < 0]
 print("Rader med negative verdier for 'value':\n", unusual_values)
 
-# Opprett katalogen hvis den ikke eksisterer
+# Endre negative verdier til null
+df.loc[df['value'] < 0, 'value'] = 0
+
+# Bekreft at negative verdier er fikset
+fixed_values = df[df['value'] == 0]
+print("Rader med negative verdier er nå fikset:\n", fixed_values)
+
+# Definer stien til katalogen for rensede data
 cleaned_dir = os.path.join(project_root, 'data', 'clean')
-if not os.path.exists(cleaned_dir):
-    os.makedirs(cleaned_dir)
 
 # Lagre den rensede dataen i en ny JSON-fil
-cleaned_json_file = os.path.join(cleaned_dir, 'cleaned_api_nilu_air_quality_trondheim_2009_to_2024.json')
+cleaned_json_file = os.path.join(cleaned_dir, 'cleaned_data_nilu.json')
 df.to_json(cleaned_json_file, orient='records', lines=True)
 print(f"Renset data lagret i '{cleaned_json_file}'")
+

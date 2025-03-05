@@ -6,7 +6,11 @@ import os
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Filsti til JSON-filen
+<<<<<<< HEAD
 json_file = os.path.join(project_root, 'data', 'raw', 'raw_api_nilu_air_quality_trondheim_2009_to_2024.json')
+=======
+json_file = os.path.join(project_root, 'data', 'raw', 'raw_api_nilu_air_quality_trondheim_2010_to_2024.json')
+>>>>>>> main
 
 # Les JSON-filen
 try:
@@ -92,6 +96,24 @@ cleaned_dir = os.path.join(project_root, 'data', 'clean')
 
 # Lagre den rensede dataen i en ny JSON-fil med lesbare datoer inkludert
 cleaned_json_file = os.path.join(cleaned_dir, 'cleaned_data_nilu.json')
+<<<<<<< HEAD
 df_pivot.to_json(cleaned_json_file, orient='records', lines=True)
 print(f"Renset data lagret i '{cleaned_json_file}'")
 
+=======
+
+# Konverter DataFrame til en liste av ordbøker
+data_to_save = df_pivot.to_dict(orient='records')
+
+# Erstatt NaN med None for å lagre som null i JSON
+for record in data_to_save:
+    for key, value in record.items():
+        if pd.isna(value):
+            record[key] = None
+
+# Lagre dataen som en JSON-fil med firkantede parenteser
+with open(cleaned_json_file, 'w') as json_file:
+    json.dump(data_to_save, json_file, indent=4)
+
+print(f"Renset data lagret i '{cleaned_json_file}'")
+>>>>>>> main

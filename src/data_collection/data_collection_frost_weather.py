@@ -2,9 +2,14 @@ import requests
 import pandas as pd
 import pandasql as ps
 import sqlite3
+import os
+from dotenv import load_dotenv
+
+# Laster inn API-nøkler og andre secrets
+load_dotenv()
 
 # Sett inn din egen klient-ID her
-client_id = '9b0d9dfa-abaf-48b9-849d-779dfbb2291e'
+client_id = os.getenv('API_KEY_frost')
 
 # Definerer endepunkt og parametere
 endpoint = 'https://frost.met.no/observations/v0.jsonld'
@@ -16,6 +21,9 @@ parameters = {
 
 # Utfør en HTTP GET-forespørsel
 r = requests.get(endpoint, params=parameters, auth=(client_id, ''))
+
+# Sjekk om forespørselen fungerte, og skriv ut eventuelle feil
+json_data = None  # Definer json_data før if-setningen
 
 # Sjekk om forespørselen fungerte, og skriv ut eventuelle feil
 if r.status_code == 200:
@@ -39,14 +47,16 @@ for i in range(len(data)):
 df = pd.concat(dataframes, ignore_index=True)
 
 # Velg relevante kolonner
-columns = ['sourceId', 'referenceTime', 'elementId', 'value', 'unit', 'timeOffset']
+columns = ['sourceId', 'referenceTime',
+           'elementId', 'value', 'unit', 'timeOffset']
 df2 = df[columns].copy()
 
 # Konverter tid til datetime-format
 df2['referenceTime'] = pd.to_datetime(df2['referenceTime'])
 
 # Filtrer for temperatur, nedbør og vindstyrke
-df2 = df2[df2['elementId'].isin(['mean(air_temperature P1D)', 'sum(precipitation_amount P1D)', 'mean(wind_speed P1D)'])]
+df2 = df2[df2['elementId'].isin(
+    ['mean(air_temperature P1D)', 'sum(precipitation_amount P1D)', 'mean(wind_speed P1D)'])]
 
 # Bruk pandasql for å hente data for hver dag
 query = """

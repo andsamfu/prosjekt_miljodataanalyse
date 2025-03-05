@@ -4,10 +4,10 @@ import json
 # Koordinater for Trondheim
 latitude = 63.43038
 longitude = 10.39355
-radius = 1  # Radius i kilometer
+radius = 1  # Radius i kilometer for å få Torvet i Trondheim
 
-# Definerer tidsperioden for 2009 til 2024 (er ikke mer data enn dette)
-fromtime = "2009-01-01"
+# Definerer tidsperioden for 2010 til 2024 (er ikke mer data enn dette)
+fromtime = "2010-01-01"
 totime = "2024-12-31"
 
 # URL for å hente døgn data
@@ -24,7 +24,7 @@ if response.status_code == 200:
     data = response.json()
     if data:
         # Lagre dataene som en JSON-fil
-        with open('data/raw/raw_api_nilu_air_quality_trondheim_2009_to_2024.json', 'w') as json_file:
+        with open('data/raw/raw_api_nilu_air_quality_trondheim_2010_to_2024.json', 'w') as json_file:
             json.dump(data, json_file, indent=4)  # Indentasjon for bedre lesbarhet
         print("Data lagret som 'trondheim_air_quality_pm25_2024.json'")
     else:

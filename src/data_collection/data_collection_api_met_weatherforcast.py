@@ -6,10 +6,10 @@ import pytz
 # URL til Yr.no API
 url = "https://api.met.no/weatherapi/locationforecast/2.0/compact"
 
-# Sett opp parametere for forespørselen
+# Sett opp parametere for forespørselen til Trondheim
 params = {
-    'lat': 63.43,  # Breddegrad for stedet du vil ha værdata for
-    'lon': 10.39    # Lengdegrad for stedet du vil ha værdata for
+    'lat': 63.43,  # Breddegrad for stedet
+    'lon': 10.39    # Lengdegrad for stedet
 }
 
 # Legg til User-Agent header som kreves av API-en
@@ -57,7 +57,7 @@ if response.status_code == 200:
         item.pop('data', None)
 
     # Lagre de modifiserte dataene til en JSON-fil
-    with open('data/processed/data_api_met_weatherforcast_trondheim.json', 'w') as json_file:
+    with open('data/filter/filter_api_met_weatherforcast_trondheim.json', 'w') as json_file:
         json.dump(data, json_file, indent=4)  # Lagre med 4 mellomrom for bedre lesbarhet
     
     print("Dataene er lagret i 'data_yr_weather.json'")

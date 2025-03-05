@@ -24,9 +24,10 @@ response = requests.get(url, params=params, headers=headers)
 if response.status_code == 200:
     data = response.json()  # Konverter JSON-responsen til et Python-objekt
     
+    # !!! MULIGENS FJERNE KODEN SOM ER KOMMENTERT UT SENERE !!!
     # Lagre raw dataen
-    with open('data/raw/raw_api_met_weatherforcast_trondheim.json', 'w') as json_file:
-        json.dump(data, json_file, indent=4)  # Lagre med 4 mellomrom for bedre lesbarhet
+    # with open('data/raw/raw_api_met_weatherforcast_trondheim.json', 'w') as json_file:
+        # json.dump(data, json_file, indent=4)  # Lagre med 4 mellomrom for bedre lesbarhet
     
     # Ekstraher timeseriene fra dataene
     timeseries = data['properties']['timeseries']
@@ -57,7 +58,7 @@ if response.status_code == 200:
         item.pop('data', None)
 
     # Lagre de modifiserte dataene til en JSON-fil
-    with open('data/filter/filter_api_met_weatherforcast_trondheim.json', 'w') as json_file:
+    with open('data/filter/raw_api_met_weatherforcast_trondheim.json', 'w') as json_file:
         json.dump(data, json_file, indent=4)  # Lagre med 4 mellomrom for bedre lesbarhet
     
     print("Dataene er lagret i 'data_yr_weather.json'")

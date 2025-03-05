@@ -11,29 +11,51 @@ load_dotenv()
 # Sett inn din egen klient-ID her
 client_id = os.getenv('API_KEY_frost')
 
-# Definerer endepunkt og parametere
-endpoint = 'https://frost.met.no/observations/v0.jsonld'
-parameters = {
-    'sources': 'SN18700',  # Kilde for Trondheim
+# Definerer endepunkt for å hente kilder
+sources_endpoint = 'https://frost.met.no/sources/v0.jsonld'
+latitude = 63.43038
+longitude = 10.39355
+sources_parameters = {
+    'geometry': f'nearest(POINT({longitude} {latitude}))',  # Bruker nearest med koordinater
+    'elements': 'mean(air_temperature P1D),sum(precipitation_amount P1D),mean(wind_speed P1D)',
+}
+
+# Hent kilder basert på koordinater
+sources_response = requests.get(sources_endpoint, params=sources_parameters, auth=(client_id, ''))
+
+if sources_response.status_code == 200:
+    sources_data = sources_response.json()
+    source_id = sources_data['data'][0]['id']  # Henter den nærmeste kilden
+    print(f'Funnet kilde: {source_id}')
+else:
+    print('Feil ved henting av kilder! Returnert statuskode %s' % sources_response.status_code)
+    exit()
+
+# Definerer endepunkt og parametere for å hente observasjoner
+observations_endpoint = 'https://frost.met.no/observations/v0.jsonld'
+observations_parameters = {
+    'sources': source_id,  # Bruker den funnet kilden
     'elements': 'mean(air_temperature P1D),sum(precipitation_amount P1D),mean(wind_speed P1D)',
     'referencetime': '2010-01-01/2019-12-31',  # Tidsperiode fra 2010 til 2019
 }
 
-# Utfør en HTTP GET-forespørsel
-r = requests.get(endpoint, params=parameters, auth=(client_id, ''))
+# Utfør en HTTP GET-forespørsel for observasjoner
+r = requests.get(observations_endpoint, params=observations_parameters, auth=(client_id, ''))
 
 # Sjekk om forespørselen fungerte, og skriv ut eventuelle feil
 json_data = None  # Definer json_data før if-setningen
 
-# Sjekk om forespørselen fungerte, og skriv ut eventuelle feil
 if r.status_code == 200:
     json_data = r.json()
     data = json_data['data']
     print('Data hentet fra frost.met.no!')
 else:
     print('Feil! Returnert statuskode %s' % r.status_code)
-    print('Melding: %s' % json_data['error']['message'])
-    print('Årsak: %s' % json_data['error']['reason'])
+    json_data = r.json()  # Hent json_data for å vise feilmeldingen
+    if 'error' in json_data:
+        print('Melding: %s' % json_data['error']['message'])
+        print('Årsak: %s' % json_data['error']['reason'])
+    exit()
 
 # Opprett en liste for å lagre observasjonsdataene
 dataframes = []

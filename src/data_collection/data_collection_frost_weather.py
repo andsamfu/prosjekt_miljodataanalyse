@@ -23,6 +23,9 @@ parameters = {
 r = requests.get(endpoint, params=parameters, auth=(client_id, ''))
 
 # Sjekk om forespørselen fungerte, og skriv ut eventuelle feil
+json_data = None  # Definer json_data før if-setningen
+
+# Sjekk om forespørselen fungerte, og skriv ut eventuelle feil
 if r.status_code == 200:
     json_data = r.json()
     data = json_data['data']

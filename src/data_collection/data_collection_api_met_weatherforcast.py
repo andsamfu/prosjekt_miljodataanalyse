@@ -57,7 +57,7 @@ if response.status_code == 200:
         item.pop('data', None)
 
     # Lagre de modifiserte dataene til en JSON-fil
-    with open('data/filtered/filtered_api_met_weatherforcast_trondheim.json', 'w') as json_file:
+    with open('data/filter/filter_api_met_weatherforcast_trondheim.json', 'w') as json_file:
         json.dump(data, json_file, indent=4)  # Lagre med 4 mellomrom for bedre lesbarhet
     
     print("Dataene er lagret i 'data_yr_weather.json'")

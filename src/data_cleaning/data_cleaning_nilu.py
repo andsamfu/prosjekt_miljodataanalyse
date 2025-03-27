@@ -1,109 +1,113 @@
 import pandas as pd
 import json
 import os
+import numpy as np
 
 # Definer prosjektets rotkatalog
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Filsti til JSON-filen
-json_file = os.path.join(project_root, 'data', 'raw', 'api_nilu_air_quality.json')
+# Filsti til JSON-filene
+raw_json_file = os.path.join(project_root, 'data', 'raw', 'raw_api_nilu_air_quality_trondheim_2010_to_2024.json')
+cleaned_json_file = os.path.join(project_root, 'data', 'clean', 'cleaned_data_nilu.json')
 
-# Les JSON-filen
-try:
-    with open(json_file, 'r') as file:
-        data = json.load(file)
-    print("\nJSON-filen ble lastet vellykket.\n")
-except Exception as e:
-    print(f"Feil ved lesing av JSON-filen: {e}")
-    exit()
+# Kolonnen som skal fjernes
+column_to_remove = 'Benzo(a)pyrene in PM10 (aerosol)'
 
-# Initialiser en tom DataFrame for å samle alle målingene
-df_all = pd.DataFrame()
+# Funksjon for å laste inn JSON-fil og returnere data
+def load_json(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+        print("\nJSON-filen ble lastet vellykket.\n")
+        return data
+    except Exception as e:
+        print(f"Feil ved lesing av JSON-filen: {e}")
+        exit()
 
-# Iterer gjennom JSON-dataene og bygg DataFrame
-for entry in data:
-    component = entry['component']
-    df_component = pd.json_normalize(entry, 'values')
-    df_component['component'] = component
-    df_all = pd.concat([df_all, df_component], ignore_index=True)
+# Funksjon for å bygge en DataFrame fra JSON-data
+def build_dataframe(data):
+    df_all = pd.DataFrame()
+    for entry in data:
+        component = entry['component']
+        df_component = pd.json_normalize(entry, 'values')
+        df_component['component'] = component
+        df_all = pd.concat([df_all, df_component], ignore_index=True)
+    return df_all
 
-# Konverter 'dateTime' kolonnen til datetime-format
-df_all['dateTime'] = pd.to_datetime(df_all['dateTime'])
+# Funksjon for å rense dataen og returnere en renset DataFrame
+def clean_data(df_all, column_to_remove):
 
-# Pivotere DataFrame slik at hver målingstype blir en egen kolonne
-df_pivot = df_all.pivot_table(index='dateTime', columns='component', values='value')
+    # Konverter 'dateTime' til datetime-format
+    df_all['dateTime'] = pd.to_datetime(df_all['dateTime'])
 
-# Fjern kolonnen med "Benzo(a)pyrene in PM10 (aerosol)"-verdiene
-if 'Benzo(a)pyrene in PM10 (aerosol)' in df_pivot.columns:
-    df_pivot.drop(columns=['Benzo(a)pyrene in PM10 (aerosol)'], inplace=True)
+    # Pivotere DataFrame slik at hver målingstype blir en egen kolonne
+    df_pivot = df_all.pivot_table(index='dateTime', columns='component', values='value')
 
-# Reindekser DataFrame for å inkludere alle datoer mellom start- og sluttdato
-start_date = df_pivot.index.min()
-end_date = df_pivot.index.max()
-all_dates = pd.date_range(start=start_date, end=end_date, freq='D')
-df_pivot = df_pivot.reindex(all_dates)
+    # Fjern uønsket kolonne
+    if column_to_remove in df_pivot.columns:
+        df_pivot.drop(columns=[column_to_remove], inplace=True)
 
-# Lag en kopi av DataFrame før interpolasjon for å sammenligne senere
-df_before_interpolation = df_pivot.copy()
+    # Reindekser for å inkludere alle datoer
+    all_dates = pd.date_range(start=df_pivot.index.min(), end=df_pivot.index.max(), freq='D')
+    df_pivot = df_pivot.reindex(all_dates)
 
-# Fyll inn manglende verdier med interpolasjon
-df_pivot = df_pivot.interpolate(method='linear')
+    # Lag en kopi før interpolasjon
+    df_before_interpolation = df_pivot.copy()
 
-# Lag en kolonne som indikerer hvilke verdier som er interpolert
-for column in df_pivot.columns:
-    df_pivot[f'generated_{column}'] = df_before_interpolation[column].isna() & df_pivot[column].notna()
+    # Fyll inn manglende verdier med lineær interpolasjon
+    df_pivot = df_pivot.interpolate(method='linear')
 
-# Rund av verdiene til maks 4 desimaler
-df_pivot = df_pivot.round(4)
+    # Bruk numpy for å markere interpolerte verdier
+    for column in df_pivot.columns:
+        df_pivot[f'generated_{column}'] = np.isnan(df_before_interpolation[column]) & ~np.isnan(df_pivot[column])
 
-# Fjern duplikater
-duplicates_before = df_pivot.index.duplicated(keep='first').sum()
-df_pivot = df_pivot[~df_pivot.index.duplicated(keep='first')]
+    # Rund av verdiene til maks 4 desimaler
+    df_pivot = df_pivot.round(4)
 
-# Sjekk for uvanlige verdier (f.eks. negative verdier) og sett dem til null
-negative_values_before = (df_pivot < 0).sum().sum()
-df_pivot[df_pivot < 0] = 0
+    # Fjern duplikater
+    duplicates_before = df_pivot.index.duplicated(keep='first').sum()
+    df_pivot = df_pivot[~df_pivot.index.duplicated(keep='first')]
 
-# Tell antall genererte verdier for hver kolonne
-generated_NO2 = df_pivot['generated_NO2'].sum()
-generated_PM10 = df_pivot['generated_PM10'].sum()
-generated_PM2_5 = df_pivot['generated_PM2.5'].sum()
+    # Håndter negative verdier med numpy
+    negative_values_before = (df_pivot < 0).sum().sum()
+    df_pivot = np.maximum(df_pivot, 0)
 
-# Beregn total antall genererte verdier
-total_generated = generated_NO2 + generated_PM10 + generated_PM2_5
+    return df_pivot, duplicates_before, negative_values_before
 
-# Print informasjon om datasettet
-print(f"Antall rader i datasettet: {len(df_pivot)}")
-print(f"Antall genererte verdier:")
-print(f"  NO2: {generated_NO2}")
-print(f"  PM10: {generated_PM10}")
-print(f"  PM2.5: {generated_PM2_5}")
-print(f"Totalt antall genererte verdier: {total_generated}")
-print(f"Antall duplikater før fjerning: {duplicates_before}")
-print(f"Antall negative verdier før fjerning: {negative_values_before}")
+# Funksjon for å skrive ut informasjon om datasettet
+def print_dataset_info(df_pivot, duplicates_before, negative_values_before):
+    generated_counts = {col: df_pivot[col].sum() for col in df_pivot.columns if col.startswith('generated_')}
+    print(f"Antall rader i datasettet: {len(df_pivot)}")
+    print("Antall genererte verdier:")
+    for col, count in generated_counts.items():
+        print(f"  {col}: {count}")
+    print(f"Totalt antall genererte verdier: {sum(generated_counts.values())}")
+    print(f"Antall duplikater før fjerning: {duplicates_before}")
+    print(f"Antall negative verdier før fjerning: {negative_values_before}")
 
-# Reset index for å inkludere datoene som en kolonne
-df_pivot.reset_index(inplace=True)
-df_pivot.rename(columns={'index': 'dateTime'}, inplace=True)
-df_pivot['dateTime'] = df_pivot['dateTime'].dt.strftime('%Y-%m-%d')
+# Funksjon for å lagre den rensede dataen i en JSON-fil
+def save_cleaned_data(df_pivot, file_path):
+    df_pivot.reset_index(inplace=True)
+    df_pivot.rename(columns={'index': 'dateTime'}, inplace=True)
+    df_pivot['dateTime'] = df_pivot['dateTime'].dt.strftime('%Y-%m-%d')
 
-# Definer stien til katalogen for rensede data
-cleaned_dir = os.path.join(project_root, 'data', 'clean')
+    data_to_save = df_pivot.to_dict(orient='records')
+    for record in data_to_save:
+        for key, value in record.items():
+            if pd.isna(value):
+                record[key] = None
 
-# Lagre den rensede dataen i en ny JSON-fil med lesbare datoer inkludert
-cleaned_json_file = os.path.join(cleaned_dir, 'cleaned_data_nilu.json')
+    with open(file_path, 'w') as json_file:
+        json.dump(data_to_save, json_file, indent=4)
+    print(f"Renset data lagret i '{file_path}'")
 
-# Konverter DataFrame til en liste av ordbøker
-data_to_save = df_pivot.to_dict(orient='records')
+# Hovedfunksjonen som kjører alle funksjonene
+def main():
+    data = load_json(raw_json_file)
+    df_all = build_dataframe(data)
+    df_pivot, duplicates_before, negative_values_before = clean_data(df_all, column_to_remove)
+    print_dataset_info(df_pivot, duplicates_before, negative_values_before)
+    save_cleaned_data(df_pivot, cleaned_json_file)
 
-# Erstatt NaN med None for å lagre som null i JSON
-for record in data_to_save:
-    for key, value in record.items():
-        if pd.isna(value):
-            record[key] = None
-
-# Lagre dataen som en JSON-fil med firkantede parenteser
-with open(cleaned_json_file, 'w') as json_file:
-    json.dump(data_to_save, json_file, indent=4)
-
-print(f"Renset data lagret i '{cleaned_json_file}'")
+# Kjør hovedfunksjonen
+main()

@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.graph_objects as go
 
 # Definerer stien til databasen
-database_file = 'data/raw/raw_api_frost_weather_trondheim_2010_to_2019.db'
+database_file = 'data/raw/api_frost_weather.db'
 
 # Opprett en tilkobling til databasen
 conn = sqlite3.connect(database_file)

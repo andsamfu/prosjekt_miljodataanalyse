@@ -1,6 +1,8 @@
 import requests
+import pandas as pd
+import pandasql as ps
+import sqlite3
 import os
-import json
 from dotenv import load_dotenv
 
 class WeatherDataFetcher:
@@ -15,7 +17,6 @@ class WeatherDataFetcher:
         self.observations_endpoint = 'https://frost.met.no/observations/v0.jsonld'
         self.source_id = None
 
-    # Find den nærmeste værstasjonen
     def fetch_sources(self):
         sources_parameters = {
             'geometry': f'nearest(POINT({self.longitude} {self.latitude}))',
@@ -31,7 +32,6 @@ class WeatherDataFetcher:
             print('Feil ved henting av kilder! Returnert statuskode %s' % sources_response.status_code)
             exit()
 
-    # Hente data fra nærmeste stasjonen
     def fetch_observations(self):
         observations_parameters = {
             'sources': self.source_id,
@@ -51,16 +51,47 @@ class WeatherDataFetcher:
                 print('Årsak: %s' % json_data['error']['reason'])
             exit()
 
+    def process_data(self, data):
+        dataframes = []
+        for i in range(len(data)):
+            row = pd.DataFrame(data[i]['observations'])
+            row['referenceTime'] = data[i]['referenceTime']
+            row['sourceId'] = data[i]['sourceId']
+            dataframes.append(row)
+
+        df = pd.concat(dataframes, ignore_index=True)
+        columns = ['sourceId', 'referenceTime', 'elementId', 'value', 'unit', 'timeOffset']
+        df2 = df[columns].copy()
+        df2['referenceTime'] = pd.to_datetime(df2['referenceTime'])
+        df2 = df2[df2['elementId'].isin(['mean(air_temperature P1D)', 'sum(precipitation_amount P1D)', 'mean(wind_speed P1D)'])]
+        return df2
+
     def run(self):
         self.fetch_sources()
         data = self.fetch_observations()
-        
-        # Save the original data to a JSON file
-        json_file_path = 'data/raw/api_frost_weather.json'
-        with open(json_file_path, 'w') as json_file:
-            json.dump(data, json_file, indent=4)
-        
-        print(f"Data lagret i '{json_file_path}' i JSON-format.")
+        processed_data = self.process_data(data)
+
+        query = """
+        SELECT 
+            DATE(referenceTime) AS date,
+            MAX(CASE WHEN elementId = 'mean(air_temperature P1D)' THEN value END) AS mean_air_temperature,
+            SUM(CASE WHEN elementId = 'sum(precipitation_amount P1D)' THEN value END) AS total_precipitation,
+            MAX(CASE WHEN elementId = 'mean(wind_speed P1D)' THEN value END) AS mean_wind_speed
+        FROM processed_data
+        GROUP BY date
+        ORDER BY date
+        """
+
+        result = ps.sqldf(query, locals())
+        print(result)
+
+        # Save the result to a SQLite database
+        database_file = 'data/raw/api_frost_weather.db'
+        conn = sqlite3.connect(database_file)
+        result.to_sql('weather_data', conn, if_exists='replace', index=False)
+        conn.close()
+
+        print(f"Data lagret i '{database_file}' i tabellen 'weather_data'.")
 
 # Example usage
 latitude = 63.43038
@@ -71,5 +102,5 @@ to_date = "2019-12-31"
 # Create an instance of the WeatherDataFetcher class
 fetcher = WeatherDataFetcher(latitude, longitude, from_date, to_date)
 
-# Run the data fetching and saving
+# Run the data fetching and processing
 fetcher.run()

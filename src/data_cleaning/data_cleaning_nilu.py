@@ -36,7 +36,7 @@ def build_dataframe(data):
 
 # Funksjon for å rense dataen og returnere en renset DataFrame
 def clean_data(df_all, column_to_remove):
-
+    
     # Konverter 'dateTime' til datetime-format
     df_all['dateTime'] = pd.to_datetime(df_all['dateTime'])
 
@@ -46,6 +46,19 @@ def clean_data(df_all, column_to_remove):
     # Fjern uønsket kolonne
     if column_to_remove in df_pivot.columns:
         df_pivot.drop(columns=[column_to_remove], inplace=True)
+
+    # Fjern outliers basert på standardavvik
+    num_std = 3  # Antall standardavvik som definerer outliers
+    outliers_removed = {}  # Dictionary for å lagre antall outliers per kolonne
+    for column in df_pivot.columns:
+        mean = df_pivot[column].mean()
+        std = df_pivot[column].std()
+        lower_bound = mean - num_std * std
+        upper_bound = mean + num_std * std
+        # Tell antall verdier som blir outliers
+        outliers_removed[column] = ((df_pivot[column] < lower_bound) | (df_pivot[column] > upper_bound)).sum()
+        # Sett verdier utenfor [lower_bound, upper_bound] til NaN
+        df_pivot[column] = df_pivot[column].where((df_pivot[column] >= lower_bound) & (df_pivot[column] <= upper_bound), np.nan)
 
     # Reindekser for å inkludere alle datoer
     all_dates = pd.date_range(start=df_pivot.index.min(), end=df_pivot.index.max(), freq='D')
@@ -72,10 +85,11 @@ def clean_data(df_all, column_to_remove):
     negative_values_before = (df_pivot < 0).sum().sum()
     df_pivot = np.maximum(df_pivot, 0)
 
-    return df_pivot, duplicates_before, negative_values_before
+    return df_pivot, duplicates_before, negative_values_before, outliers_removed
 
 # Funksjon for å skrive ut informasjon om datasettet
-def print_dataset_info(df_pivot, duplicates_before, negative_values_before):
+def print_dataset_info(df_pivot, duplicates_before, negative_values_before, outliers_removed):
+    
     generated_counts = {col: df_pivot[col].sum() for col in df_pivot.columns if col.startswith('generated_')}
     print(f"Antall rader i datasettet: {len(df_pivot)}")
     print("Antall genererte verdier:")
@@ -84,6 +98,9 @@ def print_dataset_info(df_pivot, duplicates_before, negative_values_before):
     print(f"Totalt antall genererte verdier: {sum(generated_counts.values())}")
     print(f"Antall duplikater før fjerning: {duplicates_before}")
     print(f"Antall negative verdier før fjerning: {negative_values_before}")
+    print("Antall outliers fjernet per kolonne:")
+    for column, count in outliers_removed.items():
+        print(f"  {column}: {count}")
 
 # Funksjon for å lagre den rensede dataen i en JSON-fil
 def save_cleaned_data(df_pivot, file_path):
@@ -105,8 +122,8 @@ def save_cleaned_data(df_pivot, file_path):
 def main():
     data = load_json(raw_json_file)
     df_all = build_dataframe(data)
-    df_pivot, duplicates_before, negative_values_before = clean_data(df_all, column_to_remove)
-    print_dataset_info(df_pivot, duplicates_before, negative_values_before)
+    df_pivot, duplicates_before, negative_values_before, outliers_removed = clean_data(df_all, column_to_remove)
+    print_dataset_info(df_pivot, duplicates_before, negative_values_before, outliers_removed)
     save_cleaned_data(df_pivot, cleaned_json_file)
 
 # Kjør hovedfunksjonen

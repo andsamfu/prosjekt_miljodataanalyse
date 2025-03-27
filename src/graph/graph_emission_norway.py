@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 import plotly.offline as pyo
 
 # Les JSON-data fra fil
-with open('data/raw/raw_download_ssb_climate_gasses_norway_1990_to_2023.json', 'r') as f:
+with open('data/raw/download_ssb_climate_gasses.json', 'r') as f:
     data = json.load(f)
 
 # Hent dimensjonsinformasjon

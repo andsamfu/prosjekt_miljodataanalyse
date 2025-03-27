@@ -1,7 +1,15 @@
-# Fjerne python environment (venv) fra å bli lastet opp
-# Bruker requirements fil for å gi liste med pakker som er brukt
-/venv/
-
 # Putter api_key og annet viktig inn i .env filen som ikke skal hardkodes inn
 # Valgt bevisst å kommentere ut .env filen slik at den lastes opp til github
 # .env
+
+# Virtuelle miljøer
+venv/
+
+# Datafiler (store og gjenopprettbare)
+data/raw/
+data/clean/
+
+# Unntak for å beholde mappestrukturen i Git
+!data/raw/.gitkeep
+!data/clean/.gitkeep
+

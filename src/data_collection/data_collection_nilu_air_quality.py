@@ -1,33 +1,44 @@
 import requests
 import json
 
-# Koordinater for Trondheim
+class AirQualityDataFetcher:
+    def __init__(self, latitude, longitude, fromtime, totime, radius=20):
+        self.latitude = latitude
+        self.longitude = longitude
+        self.fromtime = fromtime
+        self.totime = totime
+        self.radius = radius
+        self.url = f"https://api.nilu.no/stats/day/{self.fromtime}/{self.totime}/{self.latitude}/{self.longitude}/{self.radius}"
+
+    def fetch_data(self):
+        response = requests.get(self.url)
+        if response.status_code == 200:
+            data = response.json()
+            if data:
+                return data
+            else:
+                print("Ingen data tilgjengelig for den angitte perioden.")
+                return None
+        else:
+            print(f"Feil ved henting av data: {response.status_code}")
+            return None
+
+    def save_data(self, data, filename):
+        with open(filename, 'w') as json_file:
+            json.dump(data, json_file, indent=4)  # Indentasjon for bedre lesbarhet
+        print(f"Data lagret som '{filename}'")
+
+    def run(self):
+        data = self.fetch_data()
+        if data:
+            self.save_data(data, 'data/raw/api_nilu_air_quality.json')
+
+# Initialiserer klassen med de ønskede verdiene
 latitude = 63.43038
 longitude = 10.39355
-radius = 1  # Radius i kilometer for å få Torvet i Trondheim
-
-# Definerer tidsperioden for 2010 til 2024 (er ikke mer data enn dette)
 fromtime = "2010-01-01"
 totime = "2024-12-31"
 
-# URL for å hente døgn data
-url = f"https://api.nilu.no/stats/day/{fromtime}/{totime}/{latitude}/{longitude}/{radius}"
-
-# Komponent vi ønsker å filtrere på
-# component = "PM2.5"
-# URL med times data
-# url = f"https://api.nilu.no/aq/historical/{fromtime}/{totime}/{latitude}/{longitude}/{radius}?components={component}"
-
-response = requests.get(url)
-
-if response.status_code == 200:
-    data = response.json()
-    if data:
-        # Lagre dataene som en JSON-fil
-        with open('data/raw/raw_api_nilu_air_quality_trondheim_2010_to_2024.json', 'w') as json_file:
-            json.dump(data, json_file, indent=4)  # Indentasjon for bedre lesbarhet
-        print("Data lagret som 'trondheim_air_quality_pm25_2024.json'")
-    else:
-        print("Ingen data tilgjengelig for den angitte perioden.")
-else:
-    print(f"Feil ved henting av data: {response.status_code}")
+# Oppretter et objekt av klassen og kjører metoden
+fetcher = AirQualityDataFetcher(latitude, longitude, fromtime, totime)
+fetcher.run()

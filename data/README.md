@@ -15,3 +15,9 @@ Describes the data directory and datasets
 	- [Luftkvalitet i Norge](https://luftkvalitet.miljodirektoratet.no/artikkel/artikler/apne-data-og-statistikk/#M_ledata_for_lokal_luftkvalitet)
 	- [Historical data \| NILU – Norwegian Institute for Air Research](https://luftkvalitet.nilu.no/en/historical) eller bruke api [Luftkvalitet API](https://api.nilu.no/docs/)
 	- [Utslipp til luft  –  SSB](https://www.ssb.no/natur-og-miljo/forurensning-og-klima/statistikk/utslipp-til-luft)
+
+### RAW filer
+Er for data som ikke er kontrollert og rensket opp i, så ikke sjekke at formatet på dataen er riktig og sjekke etter mangler. Det kan være data der vi har filtrert ut unøvendig data og formatert det til json, csv eller json.
+
+### Clean filer
+Er for data som er kontrollert og rensket opp i. Skal hentes fra raw data, for det er ikke alltid APIer fungerer, og derfor må raw data være lastet ned.

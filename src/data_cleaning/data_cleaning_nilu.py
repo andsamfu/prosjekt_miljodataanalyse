@@ -6,7 +6,7 @@ import os
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Filsti til JSON-filen
-json_file = os.path.join(project_root, 'data', 'raw', 'raw_api_nilu_air_quality_trondheim_2010_to_2024.json')
+json_file = os.path.join(project_root, 'data', 'raw', 'api_nilu_air_quality.json')
 
 # Les JSON-filen
 try:

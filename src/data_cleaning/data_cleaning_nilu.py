@@ -7,7 +7,7 @@ import numpy as np
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Filsti til JSON-filene
-raw_json_file = os.path.join(project_root, 'data', 'raw', 'raw_api_nilu_air_quality_trondheim_2010_to_2024.json')
+raw_json_file = os.path.join(project_root, 'data', 'raw', 'api_nilu_air_quality.json')
 cleaned_json_file = os.path.join(project_root, 'data', 'clean', 'cleaned_data_nilu.json')
 
 # Kolonnen som skal fjernes

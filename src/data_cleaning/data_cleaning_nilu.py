@@ -2,7 +2,7 @@ import pandas as pd
 import json
 import os
 import numpy as np
-from sklearn.impute import KNNImputer  # Importer KNNImputer
+from sklearn.impute import KNNImputer
 
 # Definer prosjektets rotkatalog
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

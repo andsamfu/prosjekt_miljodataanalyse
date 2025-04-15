@@ -1,51 +1,26 @@
-# Miljødataanalyse
+Presenter prosjektet
 
-Dette prosjektet er utviklet som en del av faget Anvendt programering på NTNU, og har som mål å gi studentene praktisk erfaring med programmering, dataanalyse, datavisualisering, versjonskontroll og testing. Prosjektet handler om å hente inn miljødata fra åpne kilder – som for eksempel værdata og luftkvalitet – for å analysere, rense og visualisere informasjonen på en måte som kan gi innsikt i miljørelaterte utfordringer.
+Hva som skal til for å starte prosjektet
+- Venv
+- Requierments osv
 
-Dataene vi samler inn kommer fra åpne og pålitelige datakilder, og skal brukes til å:
-- Identifisere trender og mønstre i miljøutvikling
-- Sammenligne data over tid eller geografisk
-- Bidra til datadrevne prediksjoner
+Kort om datasetten
 
----
+Presenter hvordan vi har tolket oppgaven, at vi har valgt å dele den i to med to ulike data kilder som løser ulike problemer, og hvordan vi stegvis med datainnsamling, rensing, analyse og visualisering har valgt å løse oppgaven.
 
-## 🎯 Målsetning
+Presentere filstrukturen
 
-- Hente miljødata fra åpne API-er og datasett
-- Rense, transformere og lagre dataene i strukturert form
-- Analysere data med Python og relevante biblioteker
-- Visualisere resultater på en forståelig måte
-- Utføre predektive analyser på datasettene
-- Bruke versjonskontroll og samarbeide effektivt i team
-- Etter hvert også implementere enhetstesting
+# 🌳 Miljødataanalyse
+Dette prosjektet er utviklet som en del av faget Anvendt programmering ved NTNU, og har som mål å gi oss studenter praktisk erfaring med programmering, dataanalyse, datavisualisering, versjonskontroll og testing.
 
----
+Prosjektet handler om å hente inn miljødata fra åpne kilder – som for eksempel værdata og luftkvalitet – for å analysere, rense og visualisere informasjonen på en måte som kan gi innsikt i miljørelaterte utfordringer.
 
-## 📁 Mappestruktur
+I tillegg til dette skal vi også gjennomføre en prediktiv analyse basert på værdata, for å kunne si noe om hvordan klimaet kan utvikle seg fremover. 
 
-```bash
-.
-├── data/                             # Datasett (rå, renset)
-│   ├── raw/
-│   └── clean/
-├── docs/                             # Dokumentasjon (inkl. KI-erklæring)
-│   └── ki/
-├── notebooks/                        # Analyse og visualisering i Jupyter
-├── src/                              # Kildekode
-│   ├── data_collection/              # Innsamling av data
-│   ├── data_cleaning/                # Rensing og klargjøring av data
-│   └── graph/                        # Generering av grafer
-├── tests/                            # Enhetstester (kommer senere i prosjektet)
-├── .gitignore
-├── requirements/                     # Liste over nødvendige Python-biblioteker
-│   ├── requierments_macOS.txt/       # Innsamling av data
-│   └── requierments_windows.txt/     # Rensing og klargjøring av data
-└── README.md
-```
-
----
 
 ## ⚙️ Kom i gang
+
+For å kunne kjøre prosjektet lokalt og følge analysene steg for steg, må du sette opp utviklingsmiljøet ditt med riktig Python-versjon og nødvendige biblioteker. Denne delen hjelper deg i gang med å klone prosjektet, opprette et virtuelt miljø og installere nødvendige biblioteker.
 
 ### Forutsetninger
 - Python 3.13.2 eller nyere
@@ -71,48 +46,56 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements_macOS.txt  #Windows: requierments_windows.txt
 ```
 
----
 
-## 📊 Brukte teknologier og biblioteker
+## 📖 Oppgavetolkning og tilnærming
 
-- Python
-- Jupyter Notebook
-- pandas, numpy (databehandling)
-- matplotlib, seaborn, plotly (visualisering)
-- requests, dotenv (API-tilgang)
-- Git og GitHub (versjonskontroll og samarbeid)
+I dette prosjektet har vi tolket oppgaven som en mulighet til å hente inn, bearbeide og analysere miljødata for å få innsikt i ulike typer miljøutfordringer. For å gjøre oppgaven mer konkret og målrettet, har vi valgt å dele prosjektet i to deler basert på to forskjellige datakilder:
 
----
+- **Luftkvalitet**: Måledata fra Trondheim som gir innsikt i lokal luftforurensning og hvordan den varierer over tid.  
+- **Værdata**: Historiske værdata fra en valgfri lokasjon, som brukes som grunnlag for en prediktiv analyse av fremtidig klimautvikling.
 
-## 🔍 Datakilder
+Ved å analysere luftdata kan man avdekke mønstre og trender i luftforurensning, noe som er nyttig for både innbyggere og beslutningstakere. Værdataen gir oss muligheten til å se på langsiktige klimaendringer, og med prediktiv modellering kan vi forsøke å si noe om hvordan klimaet vil utvikle seg fremover.
 
-Vi benytter åpne og autoritative kilder som:
-- [Yr API (Meteorologisk institutt)](https://developer.yr.no/)
-- [NILU – Norsk institutt for luftforskning](https://api.nilu.no/)
+Vi har strukturert arbeidet vårt i fire hovedfaser:
 
-Alle brukte datakilder dokumenteres kort her, og du finner mer detaljer i README-filene i de respektive mappene som `src/data_collection/` og `data/`
+1. **Datainnsamling** – hente rådata fra åpne og pålitelige kilder  
+2. **Datarensing** – rydde og strukturere dataene for å sikre kvalitet  
+3. **Analyse og visualisering** – gjøre dataene forståelige og utforske mønstre og sammenhenger  
+4. **Prediktiv analyse** – (for værdata) modellere og forutsi fremtidige klimatiske forhold
 
----
+Denne fremgangsmåten gir en helhetlig og praktisk innføring i hvordan miljødata kan brukes for å få innsikt, ta bedre beslutninger og forstå utviklingen over tid.
 
-## ✅ Enhetstesting
 
-Per nå er det ikke lagt inn noen enhetstester i prosjektet. Mappen `tests/` er opprettet og skal fylles ut senere i prosjektforløpet, i forkant av ferdig innlevering. Vi planlegger å bruke `unittest` for å teste kritiske funksjoner med både gyldige og ugyldige input.
 
----
+## 📁 Mappestruktur
+Under vises en oversikt over prosjektets mappestruktur. Strukturen er laget for å gi god oversikt, skille mellom rådata, kode og dokumentasjon, og legge til rette for en ryddig og effektiv arbeidsflyt.
 
-## 🔁 Versjonskontroll
+```bash
+.
+├── data/                             # Datasett (rå, renset)
+│   ├── raw/
+│   └── clean/
+├── docs/                             # Dokumentasjon (inkl. KI-erklæring)
+│   └── ki/
+├── notebooks/                        # Analyse og visualisering i Jupyter
+├── src/                              # Kildekode
+│   ├── data_collection/              # Innsamling av data
+│   ├── data_cleaning/                # Rensing og klargjøring av data
+│   └── graph/                        # Generering av grafer
+├── tests/                            # Enhetstester (kommer senere i prosjektet)
+├── .gitignore
+├── requirements/                     # Liste over nødvendige Python-biblioteker
+│   ├── requierments_macOS.txt/       # Innsamling av data
+│   └── requierments_windows.txt/     # Rensing og klargjøring av data
+└── README.md
+```
 
-Prosjektet benytter Git og GitHub, og følger anbefalte praksiser:
 
-- Separate grener for funksjoner og oppgaver (`feature/`, `fix/`, `upgrade/` osv.)
-- GitHub Issues brukes til å fordele og spore oppgaver
-- Pull requests og merges til `main`
-- `.gitignore` for å unngå innjekking av store eller følsomme filer
-- Jevnlige commits med beskrivende meldinger
-- README-filer og requirements-fil holdes oppdatert
+## 🚀 Kom i gang med prosjektet
 
----
+Nå som prosjektets bakgrunn og struktur er presentert, er neste steg å starte selve gjennomføringen. Vi har laget en hovednotebook som fungerer som inngangspunkt og guider deg gjennom installasjon, oppgavetolkning og første steg i dataanalysen.
 
-## 🧾 Lisens
+👉 Gå videre til [notebooken for datainnsamling og rensing](notebooks/00_project_setup.ipynb) for å sette i gang.
 
-Dette prosjektet er laget som en del av et skolefag, og er ment for læring og innlevering. Koden kan gjerne brukes og deles innenfor klassen eller fagmiljøet, men er ikke ment for kommersiell bruk.
+
+

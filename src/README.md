@@ -55,23 +55,58 @@ Fremgangsmåte:
 
 ---
 
-## 🧹 `data_cleaning/` – Datarensing
+## 🧹 Datarensing (`data_cleaning/`)
 
-Etter at rådata er hentet, behandles de i `data_cleaning/` for å sikre at de er klare til analyse og visualisering.
+Etter at rådata er hentet, behandles de i `data_cleaning/` for å sikre at de er klare til analyse og visualisering. Dette innebærer en rekke rensetrinn som er nøye tilpasset formålet med prosjektet: å sikre høy datakvalitet, pålitelighet og sporbarhet.
 
-Rensetrinnene for NILU-data inkluderer:
-- Konvertering av `dateTime` til riktig tidsformat
-- Pivoterer målinger slik at hver luftkomponent blir en kolonne
-- Fjerner irrelevante komponenter (f.eks. benzo(a)pyrene)
-- Fyller inn manglende dager med tomme rader
-- Bruker lineær interpolasjon for å estimere manglende verdier
-- Lager ekstra kolonner som viser hvilke verdier som er generert (interpolert)
-- Runder av verdier og fjerner duplikater
-- Erstatter negative verdier med 0 for å unngå feil i videre analyser
+### Rensetrinn og valg
 
-Den rensede dataen lagres i `data/clean/` som `.json` og inneholder én rad per dato, med enhetlige og ryddige kolonnenavn.
+Rensingen av NILU-data følger en strukturert prosess der hvert steg er begrunnet:
+
+1. **Konvertering av datoer**  
+   - `dateTime` konverteres til korrekt datetime-format for videre tidsseriebehandling.
+
+2. **Pivottabell**  
+   - Målinger transformeres slik at hver luftkomponent (f.eks. NO₂, PM10, PM2.5) får sin egen kolonne.
+
+3. **Fjerning av uønsket kolonne**  
+   - **Valg**: *Benzo(a)pyrene in PM10 (aerosol)* fjernes.  
+   - **Begrunnelse**: Denne komponenten er ikke relevant for analysen og fjernes for å redusere støy og holde fokus på sentrale luftkvalitetsindikatorer.
+
+4. **Reindeksering for å inkludere alle datoer**  
+   - Datoindeksen utvides slik at alle datoer i perioden dekkes, også de uten målinger.  
+   - **Begrunnelse**: Dette sikrer en komplett tidsserie og tydeliggjør eventuelle manglende data.
+
+5. **KNN-imputasjon for manglende verdier**  
+   - **Valg**: Manglende verdier fylles inn ved hjelp av KNN-imputasjon med 50 nærmeste naboer (k=50).  
+   - **Begrunnelse**: KNN gir mer nøyaktige estimater enn enklere metoder som lineær interpolasjon, særlig når store dataintervaller mangler. Metoden tar hensyn til sammenhenger mellom komponenter og fanger opp sesongvariasjoner, noe som gir mer realistiske og pålitelige verdier.
+
+6. **Markering av genererte verdier**  
+   - Kolonner på formen `generated_<column>` opprettes for å vise hvilke verdier som er imputert.  
+   - **Begrunnelse**: Dette øker transparens og gir mulighet til å skille mellom originale og estimerte data.
+
+7. **Håndtering av negative verdier**  
+   - **Valg**: Alle negative verdier settes til 0.  
+   - **Begrunnelse**: Negative verdier er ugyldige for luftkvalitetsmålinger og kan skyldes målefeil.
+
+8. **Fjerning av duplikater**  
+   - **Valg**: Kun første forekomst beholdes ved duplikate tidsstempler.  
+   - **Begrunnelse**: Duplikater kan føre til skjevheter og overrepresentasjon i analysen.
+
+9. **Runding av verdier**  
+   - **Valg**: Verdier rundes av til maksimalt 4 desimaler.  
+   - **Begrunnelse**: Gir konsistent formatering og økt lesbarhet, uten å ofre nødvendig presisjon.
+
+10. **Lagring av renset data**  
+    - **Valg**: Renset datasett lagres som `.json` i `data/clean/`.  
+    - **Begrunnelse**: JSON er både lett å lese og kompatibelt med videre analyse- og visualiseringsverktøy. Hver fil inneholder én rad per dato med standardiserte kolonnenavn.
 
 ---
+
+### ✅ Oppsummering
+
+Databehandlingen i `data_cleaning_nilu.py` følger prinsipper for god datarensing: fjerning av støy, håndtering av manglende eller ugyldige verdier, tydelig merking av estimerte data og standardisering. Disse grepene danner et solid grunnlag for videre analyse, prediksjon og visualisering, og sikrer at dataene er både pålitelige og transparente.
+
 
 ## 📊 `graph/` – Visualisering (under utvikling)
 

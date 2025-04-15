@@ -2,6 +2,7 @@ import pandas as pd
 import json
 import os
 import numpy as np
+from sklearn.impute import KNNImputer
 
 # Definer prosjektets rotkatalog
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -36,7 +37,6 @@ def build_dataframe(data):
 
 # Funksjon for å rense dataen og returnere en renset DataFrame
 def clean_data(df_all, column_to_remove):
-    
     # Konverter 'dateTime' til datetime-format
     df_all['dateTime'] = pd.to_datetime(df_all['dateTime'])
 
@@ -64,28 +64,32 @@ def clean_data(df_all, column_to_remove):
     all_dates = pd.date_range(start=df_pivot.index.min(), end=df_pivot.index.max(), freq='D')
     df_pivot = df_pivot.reindex(all_dates)
 
-    # Lag en kopi før interpolasjon
-    df_before_interpolation = df_pivot.copy()
+    # Lag en kopi før imputasjon
+    df_before_imputation = df_pivot.copy()
 
-    # Fyll inn manglende verdier med lineær interpolasjon
-    df_pivot = df_pivot.interpolate(method='linear')
+    # Bruk KNN-imputasjon for å fylle inn manglende verdier
+    imputer = KNNImputer(n_neighbors=50)  # Bruk 5 nærmeste naboer
+    df_pivot_imputed = pd.DataFrame(imputer.fit_transform(df_pivot), columns=df_pivot.columns, index=df_pivot.index)
 
-    # Bruk numpy for å markere interpolerte verdier
+    # Marker genererte verdier
     for column in df_pivot.columns:
-        df_pivot[f'generated_{column}'] = np.isnan(df_before_interpolation[column]) & ~np.isnan(df_pivot[column])
+        df_pivot_imputed[f'generated_{column}'] = np.isnan(df_before_imputation[column]) & ~np.isnan(df_pivot_imputed[column])
 
     # Rund av verdiene til maks 4 desimaler
-    df_pivot = df_pivot.round(4)
+    df_pivot_imputed = df_pivot_imputed.round(4)
+
+    # Bruk glidende gjennomsnitt for å jevne ut dataene
+    df_pivot_imputed = df_pivot_imputed.rolling(window=3, min_periods=1).mean()
 
     # Fjern duplikater
-    duplicates_before = df_pivot.index.duplicated(keep='first').sum()
-    df_pivot = df_pivot[~df_pivot.index.duplicated(keep='first')]
+    duplicates_before = df_pivot_imputed.index.duplicated(keep='first').sum()
+    df_pivot_imputed = df_pivot_imputed[~df_pivot_imputed.index.duplicated(keep='first')]
 
     # Håndter negative verdier med numpy
-    negative_values_before = (df_pivot < 0).sum().sum()
-    df_pivot = np.maximum(df_pivot, 0)
+    negative_values_before = (df_pivot_imputed < 0).sum().sum()
+    df_pivot_imputed = np.maximum(df_pivot_imputed, 0)
 
-    return df_pivot, duplicates_before, negative_values_before, outliers_removed
+    return df_pivot_imputed, duplicates_before, negative_values_before, outliers_removed
 
 # Funksjon for å skrive ut informasjon om datasettet
 def print_dataset_info(df_pivot, duplicates_before, negative_values_before, outliers_removed):

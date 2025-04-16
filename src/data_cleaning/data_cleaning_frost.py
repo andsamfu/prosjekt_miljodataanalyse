@@ -3,7 +3,7 @@ import json
 import os
 import numpy as np
 import sqlite3
-from .data_validators import MissingValueValidator, ValueRangeValidator, DateContinuityValidator
+from data_validators import MissingValueValidator, ValueRangeValidator, DateContinuityValidator
 
 def clean_frost_data(json_file, db_file):
     # Load the JSON data

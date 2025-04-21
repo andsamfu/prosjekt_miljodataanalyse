@@ -48,8 +48,8 @@ for i, season in enumerate(seasons):
 
 
 plt.figtext(0.5, 0.97,
-            "Regresjonsmodeller som viser sammenhengen mellom temperatur og nedbør i ulike sesonger (FROST-data)",
+            "Regresjonsmodeller per sesong: Temperatur vs nedbør (gjennomsnitt per år 2010 - 2019)",
             ha="center", fontsize=12, fontweight='bold')
 
-plt.tight_layout(rect=[0, 0, 1, 0.95])  # Legg til plass til tekst øverst
+plt.tight_layout(rect=[0, 0, 1, 0.95]) 
 plt.show()

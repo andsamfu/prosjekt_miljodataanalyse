@@ -39,8 +39,9 @@ for i, season in enumerate(seasons):
 
 #
 plt.figtext(0.5, 0.97,
-            "Regresjonsmodeller som viser sammenhengen mellom PM10 og NO2 nivåer (NILU-data) i ulike sesonger",
+            "Regresjonsmodeller per sesong: Sammenheng mellom PM10 og NO₂ (gjennomsnitt per år 2010 - 2024)",
             ha="center", fontsize=12, fontweight='bold')
+
 
 plt.tight_layout(rect=[0, 0, 1, 0.95])
 plt.show()

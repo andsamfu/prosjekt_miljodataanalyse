@@ -48,7 +48,7 @@ def clean_data(df_all, column_to_remove):
         df_pivot.drop(columns=[column_to_remove], inplace=True)
 
     # Fjern outliers basert på standardavvik
-    num_std = 3  # Antall standardavvik som definerer outliers
+    num_std = 4  # Antall standardavvik som definerer outliers
     outliers_removed = {}  # Dictionary for å lagre antall outliers per kolonne
     for column in df_pivot.columns:
         mean = df_pivot[column].mean()
@@ -68,7 +68,7 @@ def clean_data(df_all, column_to_remove):
     df_before_imputation = df_pivot.copy()
 
     # Bruk KNN-imputasjon for å fylle inn manglende verdier
-    imputer = KNNImputer(n_neighbors=50)  # Bruk 5 nærmeste naboer
+    imputer = KNNImputer(n_neighbors=100)
     df_pivot_imputed = pd.DataFrame(imputer.fit_transform(df_pivot), columns=df_pivot.columns, index=df_pivot.index)
 
     # Marker genererte verdier

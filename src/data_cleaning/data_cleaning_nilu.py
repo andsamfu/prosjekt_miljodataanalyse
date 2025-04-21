@@ -75,13 +75,6 @@ def clean_data(df_all, column_to_remove):
     for column in df_pivot.columns:
         df_pivot_imputed[f'generated_{column}'] = np.isnan(df_before_imputation[column])
 
-    # Rund av alle flytverdier til maks 4 desimaler
-    for column in df_pivot.columns:
-        df_pivot_imputed[column] = df_pivot_imputed[column].round(4)
-
-    # Bruk glidende gjennomsnitt for å jevne ut dataene
-    df_pivot_imputed[df_pivot.columns] = df_pivot_imputed[df_pivot.columns].rolling(window=3, min_periods=1).mean()
-
     # Fjern duplikater
     duplicates_before = df_pivot_imputed.index.duplicated(keep='first').sum()
     df_pivot_imputed = df_pivot_imputed[~df_pivot_imputed.index.duplicated(keep='first')]
@@ -89,6 +82,10 @@ def clean_data(df_all, column_to_remove):
     # Håndter negative verdier med numpy
     negative_values_before = (df_pivot_imputed[df_pivot.columns] < 0).sum().sum()
     df_pivot_imputed[df_pivot.columns] = np.maximum(df_pivot_imputed[df_pivot.columns], 0)
+
+    # Rund av alle flytverdier til maks 4 desimaler
+    for column in df_pivot.columns:
+        df_pivot_imputed[column] = df_pivot_imputed[column].round(4)
 
     return df_pivot_imputed, duplicates_before, negative_values_before, outliers_removed
 

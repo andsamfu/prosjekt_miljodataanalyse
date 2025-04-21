@@ -45,7 +45,7 @@ fig = px.line(df_long,
               title='Gjennomsnittlig luftkvalitet per år og sesong (interaktiv)',
               labels={'Average': 'Konsentrasjon (µg/m³)', 'year': 'År'},
               category_orders={"season": ["Vinter", "Vår", "Sommer", "Høst"]},
-              template='plotly_dark')
+              template='plotly_white')
 
 # 7. Fjern "season=" fra titlene i subplotene
 fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))

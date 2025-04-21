@@ -2,7 +2,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-# ✅ 1. Last inn NILU-data
+# 1. Last inn NILU-data
 nilu = pd.read_csv("data/analyses_results/nilu_aggregated_stats_year_season.csv", skiprows=2)
 nilu.columns = [
     'year', 'season',
@@ -13,7 +13,7 @@ nilu.columns = [
 for col in nilu.columns[2:]:
     nilu[col] = pd.to_numeric(nilu[col], errors='coerce')
 
-# ✅ 2. Last inn FROST-data
+# 2. Last inn FROST-data
 frost = pd.read_csv("data/analyses_results/frost_aggregated_stats_year_season.csv", skiprows=2)
 frost.columns = [
     'year', 'season',
@@ -24,10 +24,10 @@ frost.columns = [
 for col in frost.columns[2:]:
     frost[col] = pd.to_numeric(frost[col], errors='coerce')
 
-# ✅ 3. Slå sammen datasett
+# 3. Slå sammen datasett
 merged = pd.merge(nilu, frost, on=['year', 'season'])
 
-# ✅ 4. Fargepalett (samme som NILU og FROST)
+# 4. Fargepalett (samme som tidligere)
 season_colors = {
     "Winter": "steelblue",
     "Spring": "mediumseagreen",
@@ -35,7 +35,7 @@ season_colors = {
     "Fall": "sienna"
 }
 
-# ✅ 5. Regresjon per sesong: Temperatur vs NO₂
+# 5. Regresjonsgraf per sesong
 sns.set(style="whitegrid")
 fig, axes = plt.subplots(2, 2, figsize=(14, 10))
 fig.suptitle("FROST + NILU – Temperatur vs NO₂ per sesong", fontsize=16, y=1.03)
@@ -51,5 +51,10 @@ for i, season in enumerate(seasons):
     axes[i].set_xlabel("Temperatur (°C)")
     axes[i].set_ylabel("NO₂ (µg/m³)")
 
-plt.tight_layout()
+
+plt.figtext(0.5, 0.97,
+            "Regresjonsmodeller som viser sammenhengen mellom temperatur (FROST) og NO2 nivåer (NILU) i ulike sesonger",
+            ha="center", fontsize=12, fontweight='bold')
+
+plt.tight_layout(rect=[0, 0, 1, 0.95])
 plt.show()

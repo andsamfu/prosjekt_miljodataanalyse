@@ -2,7 +2,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-# ✅ Last inn NILU-data
+# Last inn NILU-data
 nilu = pd.read_csv("data/analyses_results/nilu_aggregated_stats_year_season.csv", skiprows=2)
 nilu.columns = [
     'year', 'season',
@@ -13,12 +13,7 @@ nilu.columns = [
 for col in nilu.columns[2:]:
     nilu[col] = pd.to_numeric(nilu[col], errors='coerce')
 
-# ✅ Regresjon per sesong med farger
-sns.set(style="whitegrid")
-fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-fig.suptitle("NILU – Sammenheng mellom NO₂ og PM10 per sesong", fontsize=16, y=1.03)
-
-seasons = ["Winter", "Spring", "Summer", "Fall"]
+# Fargevalg
 season_colors = {
     "Winter": "steelblue",
     "Spring": "mediumseagreen",
@@ -26,6 +21,12 @@ season_colors = {
     "Fall": "sienna"
 }
 
+# Regresjon per sesong
+sns.set(style="whitegrid")
+fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+fig.suptitle("NILU – Sammenheng mellom NO₂ og PM10 per sesong", fontsize=16, y=1.03)
+
+seasons = ["Winter", "Spring", "Summer", "Fall"]
 axes = axes.flatten()
 
 for i, season in enumerate(seasons):
@@ -36,5 +37,10 @@ for i, season in enumerate(seasons):
     axes[i].set_xlabel("PM10 (µg/m³)")
     axes[i].set_ylabel("NO₂ (µg/m³)")
 
-plt.tight_layout()
+#
+plt.figtext(0.5, 0.97,
+            "Regresjonsmodeller som viser sammenhengen mellom PM10 og NO2 nivåer (NILU-data) i ulike sesonger",
+            ha="center", fontsize=12, fontweight='bold')
+
+plt.tight_layout(rect=[0, 0, 1, 0.95])
 plt.show()

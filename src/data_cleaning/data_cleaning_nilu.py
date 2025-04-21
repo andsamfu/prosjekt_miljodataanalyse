@@ -52,13 +52,13 @@ def remove_outliers(df, num_std=4):
     return df, outliers_removed
 
 # Funksjon for å fylle inn manglende verdier med KNN-imputasjon
-def impute_missing_values(df, n_neighbors=5):
+def impute_missing_values(df, n_neighbors):
     imputer = KNNImputer(n_neighbors=n_neighbors)
     df_imputed = pd.DataFrame(imputer.fit_transform(df), columns=df.columns, index=df.index)
     return df_imputed
 
 # Funksjon for å rense dataen
-def clean_data(df_all, column_to_remove, num_std=4, n_neighbors=5):
+def clean_data(df_all, column_to_remove, num_std, n_neighbors):
     df_all['dateTime'] = pd.to_datetime(df_all['dateTime'])
     df_pivot = df_all.pivot_table(index='dateTime', columns='component', values='value')
 
@@ -80,16 +80,24 @@ def clean_data(df_all, column_to_remove, num_std=4, n_neighbors=5):
 
 # Funksjon for å skrive ut informasjon om datasettet
 def print_dataset_info(df_pivot, outliers_removed):
+    generated_counts = {col: int(df_pivot[col].sum()) for col in df_pivot.columns if col.startswith('generated_')}
+    info = {
+        "Antall rader": len(df_pivot),
+        "Genererte verdier per kolonne": generated_counts,
+        "Outliers fjernet per kolonne": outliers_removed
+    }
+
     print("\n=== Dataset Information ===")
-    print(f"Antall rader i datasettet: {len(df_pivot)}")
+    print(f"Antall rader i datasettet: {info['Antall rader']}")
     print("\nGenererte verdier per kolonne:")
-    for col in df_pivot.columns:
-        if col.startswith('generated_'):
-            print(f"  - {col}: {int(df_pivot[col].sum())} genererte verdier")
+    for col, count in info["Genererte verdier per kolonne"].items():
+        print(f"  - {col}: {count} genererte verdier")
     print("\nAntall outliers fjernet per kolonne:")
-    for col, count in outliers_removed.items():
+    for col, count in info["Outliers fjernet per kolonne"].items():
         print(f"  - {col}: {count} outliers fjernet")
     print("===========================\n")
+
+    return info
 
 # Funksjon for å lagre den rensede dataen i en JSON-fil
 def save_cleaned_data(df_pivot, file_path):
@@ -110,25 +118,13 @@ def save_cleaned_data(df_pivot, file_path):
     except Exception as e:
         print(f"Feil ved lagring av data: {e}")
 
-# Funksjon for å generere mock-data for testing
-def generate_mock_data():
-    data = [
-        {"dateTime": "2025-01-01", "component": "NO2", "value": 20},
-        {"dateTime": "2025-01-02", "component": "NO2", "value": 25},
-        {"dateTime": "2025-01-01", "component": "PM10", "value": 15},
-        {"dateTime": "2025-01-02", "component": "PM10", "value": None},
-    ]
-    return pd.DataFrame(data)
-
 # Hovedfunksjonen som kjører alle funksjonene
-def main():
+def main_dc_nilu():
     data = load_json(raw_json_file)
     df_all = build_dataframe(data)
-    df_pivot, outliers_removed = clean_data(df_all, column_to_remove, num_std=4, n_neighbors=5)
-    dataset_info = print_dataset_info(df_pivot, outliers_removed)
-    print(dataset_info)
+    df_pivot, outliers_removed = clean_data(df_all, column_to_remove, 4, 100)
+    dataset_info = print_dataset_info(df_pivot, outliers_removed)  # Skriver ut og returnerer info
     save_cleaned_data(df_pivot, cleaned_json_file)
+    print("\n=== Data rensing fullført ===\n")
 
-# Kjør hovedfunksjonen
-if __name__ == "__main__":
-    main()
+main_dc_nilu()

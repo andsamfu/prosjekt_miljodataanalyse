@@ -123,12 +123,33 @@ class ImputationValidator:
             df_cleaned[tracking_column] = df[column].isna()
             imputation_info[column] = df_cleaned[tracking_column].sum()
         
-        # Perform KNN imputation on numeric columns
-        if len(numeric_columns) > 0:
-            imputer = KNNImputer(n_neighbors=self.n_neighbors)
-            df_cleaned[numeric_columns] = imputer.fit_transform(df_cleaned[numeric_columns])
-            # Round numeric values to 1 decimal
-            df_cleaned[numeric_columns] = df_cleaned[numeric_columns].round(1)
+        # Add seasonal features for better imputation
+        dates = pd.to_datetime(df_cleaned['referenceTime'])
+        df_cleaned['day_of_year'] = dates.dt.dayofyear
+        df_cleaned['year'] = dates.dt.year
+        
+        # Perform imputation for each column separately
+        for column in numeric_columns:
+            # Calculate yearly averages for each day of year
+            seasonal_avg = df_cleaned.groupby('day_of_year')[column].transform('mean')
+            
+            # Use seasonal average where available, then KNN for remaining gaps
+            mask = df_cleaned[column].isna()
+            df_cleaned.loc[mask, column] = seasonal_avg[mask]
+            
+            # For any remaining NaN values, use KNN
+            still_missing = df_cleaned[column].isna()
+            if still_missing.any():
+                imputer = KNNImputer(n_neighbors=self.n_neighbors)
+                df_cleaned.loc[still_missing, column] = imputer.fit_transform(
+                    df_cleaned[['day_of_year', column]].values
+                )[still_missing]
+        
+        # Remove temporary columns
+        df_cleaned = df_cleaned.drop(['day_of_year', 'year'], axis=1)
+        
+        # Round numeric values to 1 decimal
+        df_cleaned[numeric_columns] = df_cleaned[numeric_columns].round(1)
         
         return imputation_info, df_cleaned
     

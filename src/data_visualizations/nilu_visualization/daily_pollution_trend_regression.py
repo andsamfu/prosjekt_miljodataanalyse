@@ -2,11 +2,11 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-# 1. Last inn og klargjør NILU-data
+# 1. Laster inn og klargjør NILU-data
 df = pd.read_json("data/clean/cleaned_data_nilu.json")
 df['dateTime'] = pd.to_datetime(df['dateTime'])
 
-# 2. Velg luftkomponenter
+# 2. Velger luftkomponenter
 components = ['NO2', 'PM10', 'PM2.5']
 titles = {
     'NO2': "Utvikling i NO2-nivåer (daglig)",
@@ -14,16 +14,16 @@ titles = {
     'PM2.5': "Utvikling i PM2.5-nivåer (daglig)"
 }
 
-# 3. Sett opp figuren
+# 3. Setter opp figuren
 sns.set(style="whitegrid")
 fig, axes = plt.subplots(3, 1, figsize=(14, 12), sharex=True)
 fig.subplots_adjust(hspace=0.4)
 
-# 4. Plott hver komponent
+# 4. Plotter hver komponent
 for i, comp in enumerate(components):
     data = df[['dateTime', comp]].dropna().copy()
 
-    # Bruk numerisk X kun til å kjøre regresjon
+    # Bruker numerisk X kun til å kjøre regresjon
     x_numeric = (data['dateTime'] - data['dateTime'].min()).dt.days
     data['x_temp'] = x_numeric
 

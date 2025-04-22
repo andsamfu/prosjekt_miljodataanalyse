@@ -1,5 +1,6 @@
 import pandas as pd
 import sqlite3
+from sklearn.impute import KNNImputer
 
 # 1. Last inn data fra SQLite
 db_file = 'data/clean/frost.db'
@@ -29,8 +30,9 @@ df['year'] = df['referenceTime'].dt.year
 # 4. Kolonnene for analyse (Temperatur, nedbør, vindhastighet)
 columns_to_analyze = ['mean_air_temperature', 'total_precipitation', 'mean_wind_speed']
 
-# 5. Håndtere manglende verdier (erstatte med median for hver kolonne)
-df[columns_to_analyze] = df[columns_to_analyze].fillna(df[columns_to_analyze].median())
+# 5. Bruk KNN-imputasjon for å håndtere manglende verdier
+imputer = KNNImputer(n_neighbors=100)  # Velger 100 naboer for imputasjon
+df[columns_to_analyze] = imputer.fit_transform(df[columns_to_analyze])
 
 # 6. Beregn gjennomsnitt, median og standardavvik for hvert år og årstid
 agg_stats = df.groupby(['year', 'season'])[columns_to_analyze].agg(['mean', 'median', 'std'])
@@ -48,4 +50,3 @@ print(correlation_matrix)
 # 9. Eksporter de aggregerte statistikkene og korrelasjonen til CSV-filer under data
 agg_stats.to_csv('data/analyses_results/frost_aggregated_stats_year_season.csv')
 correlation_matrix.to_csv('data/analyses_results/frost_correlation_matrix.csv')
-

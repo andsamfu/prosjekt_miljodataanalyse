@@ -37,6 +37,7 @@ class WeatherDataFetcher:
             'sources': self.source_id,
             'elements': 'mean(air_temperature P1D),sum(precipitation_amount P1D),mean(wind_speed P1D)',
             'referencetime': f'{self.from_date}/{self.to_date}',
+            'timeoffsets': 'default'  # This will select the preferred time offset for each element
         }
         r = requests.get(self.observations_endpoint, params=observations_parameters, auth=(self.client_id, ''))
 

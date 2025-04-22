@@ -1,9 +1,12 @@
+import sys
+sys.dont_write_bytecode = True
+
 import pandas as pd
 import json
 import os
 import numpy as np
 import sqlite3
-from data_validators import MissingValueValidator, ValueRangeValidator, DateContinuityValidator
+from data_validators import MissingValueValidator, OutlierValidator, DateContinuityValidator, ImputationValidator
 
 def clean_frost_data(json_file, db_file):
     # Load the JSON data
@@ -28,7 +31,8 @@ def clean_frost_data(json_file, db_file):
 
     # Filter and reshape the data
     df = df[df['elementId'].isin(['mean(air_temperature P1D)', 'sum(precipitation_amount P1D)', 'mean(wind_speed P1D)'])]
-    df['referenceTime'] = pd.to_datetime(df['referenceTime']).dt.date  # Format date as "YYYY-MM-DD"
+    # Strip time component when initially loading the data
+    df['referenceTime'] = pd.to_datetime(df['referenceTime']).dt.strftime('%Y-%m-%d')
     df_pivot = df.pivot_table(index='referenceTime', columns='elementId', values='value', aggfunc='first').reset_index()
 
     # Rename columns for clarity
@@ -47,41 +51,36 @@ def clean_frost_data(json_file, db_file):
 
     # Initialize validators
     missing_validator = MissingValueValidator()
-    range_validator = ValueRangeValidator(frost_valid_ranges)
+    outlier_validator = OutlierValidator(frost_valid_ranges)
     continuity_validator = DateContinuityValidator()
+    imputation_validator = ImputationValidator(n_neighbors=5)
     
-    # Perform validations
-    missing_results = missing_validator.validate(df_pivot)
-    range_results = range_validator.validate(df_pivot)
-    gap_results = continuity_validator.validate(df_pivot)
+    # 1. Check for missing values
+    missing_results, df_cleaned = missing_validator.validate(df_pivot)
+    missing_validator.report(missing_results)
     
-    # Report validation results
-    if missing_results:
-        print("\nMissing values detected:")
-        for column, count in missing_results.items():
-            print(f"{column}: {count} missing values")
+    # 2. Check and handle outliers
+    outlier_results, df_cleaned = outlier_validator.validate(df_cleaned)
+    outlier_validator.report(outlier_results)
     
-    if range_results:
-        print("\nOut of range values detected:")
-        for column, values in range_results.items():
-            print(f"\n{column}:")
-            print(values)
+    # 3. Check and handle date continuity
+    gap_results, df_cleaned = continuity_validator.validate(df_cleaned)
+    continuity_validator.report(gap_results)
     
-    if gap_results:
-        print("\nDate gaps detected:")
-        for start, end in gap_results:
-            print(f"Gap from {start.date()} to {end.date()}")
-
-    # Save to SQLite database
-    os.makedirs(os.path.dirname(db_file), exist_ok=True)  # Ensure the directory exists
+    # 4. Impute missing values
+    imputation_results, df_cleaned = imputation_validator.validate(df_cleaned)
+    imputation_validator.report(imputation_results)
+    
+    # Save the cleaned data including generated_ columns
+    os.makedirs(os.path.dirname(db_file), exist_ok=True)
     conn = sqlite3.connect(db_file)
-    cursor = conn.cursor()
-    cursor.execute("DROP TABLE IF EXISTS weather_data")  # Explicitly drop the table if it exists
-    conn.commit()
-    df_pivot.to_sql('weather_data', conn, if_exists='replace', index=False)
+    
+    # Convert date format when saving
+    df_cleaned['referenceTime'] = pd.to_datetime(df_cleaned['referenceTime']).dt.strftime('%Y-%m-%d')
+    df_cleaned.to_sql('weather_data', conn, if_exists='replace', index=False)
     conn.close()
 
-    print(f"Cleaned data saved to '{db_file}' in the table 'weather_data'.")
+    print(f"\nCleaned data saved to '{db_file}' in the table 'weather_data'.")
 
 # Example usage
 json_file = os.path.join('data', 'raw', 'api_frost_weather.json')

@@ -1,4 +1,7 @@
 import pandas as pd
+import sqlite3
+import os
+from sklearn.impute import KNNImputer
 
 # 1. Last inn datasettet
 filsti = "data/clean/cleaned_data_nilu.json"
@@ -27,22 +30,35 @@ df['year'] = df['dateTime'].dt.year
 # 3. Kolonnene for analyse
 columns_to_analyze = ['NO2', 'PM10', 'PM2.5']
 
-# 4. Håndtere manglende verdier (erstatte med median for hver kolonne)
-df[columns_to_analyze] = df[columns_to_analyze].fillna(df[columns_to_analyze].median())
+# 4. Bruk KNN-imputasjon for å håndtere manglende verdier
+imputer = KNNImputer(n_neighbors=100)  # Vi velger 100 her
+df[columns_to_analyze] = imputer.fit_transform(df[columns_to_analyze])
 
 # 5. Beregn gjennomsnitt, median og standardavvik for hvert år og årstid
-agg_stats = df.groupby(['year', 'season'])[columns_to_analyze].agg(['mean', 'median', 'std'])
+agg_stats_by_year_season = df.groupby(['year', 'season'])[columns_to_analyze].agg(['mean', 'median', 'std'])
 
-# 6. Beregn korrelasjonen mellom de relevante variablene (kan også utvides til å inkludere år og årstid)
+# 6. Beregn gjennomsnitt, median og standardavvik for hvert år (uten å ta hensyn til sesongene)
+agg_stats_by_year = df.groupby(['year'])[columns_to_analyze].agg(['mean', 'median', 'std'])
+
+# 7. Beregn korrelasjonen mellom de relevante variablene
 correlation_matrix = df[columns_to_analyze].corr()
 
-# 7. Skriver ut resultatene
+# 8. Skriver ut resultatene
 print("Statistikk for hvert år og årstid:")
-print(agg_stats)
+print(agg_stats_by_year_season)
+
+print("\nStatistikk for hvert år:")
+print(agg_stats_by_year)
 
 print("\nKorrelasjonsmatrise for NO2, PM10, og PM2.5:")
 print(correlation_matrix)
 
-# 8. Eksporter de aggregerte statistikkene og korrelasjonen til CSV-filer under data
-agg_stats.to_csv("data/analyses_results/nilu_aggregated_stats_year_season.csv")
-correlation_matrix.to_csv("data/analyses_results/nilu_correlation_matrix.csv")
+# 9. Eksporter de aggregerte statistikkene og korrelasjonen til CSV-filer under data
+output_directory = "data/analyses_results"
+# Sjekk om mappen eksisterer, hvis ikke, opprett den
+if not os.path.exists(output_directory):
+    os.makedirs(output_directory)
+
+agg_stats_by_year_season.to_csv(f"{output_directory}/nilu_aggregated_stats_year_season.csv")
+agg_stats_by_year.to_csv(f"{output_directory}/nilu_aggregated_stats_year.csv")  # Ny CSV for kun år
+correlation_matrix.to_csv(f"{output_directory}/nilu_correlation_matrix.csv")

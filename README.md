@@ -1,15 +1,3 @@
-Presenter prosjektet
-
-Hva som skal til for å starte prosjektet
-- Venv
-- Requierments osv
-
-Kort om datasetten
-
-Presenter hvordan vi har tolket oppgaven, at vi har valgt å dele den i to med to ulike data kilder som løser ulike problemer, og hvordan vi stegvis med datainnsamling, rensing, analyse og visualisering har valgt å løse oppgaven.
-
-Presentere filstrukturen
-
 # 🌳 Miljødataanalyse
 Dette prosjektet er utviklet som en del av faget Anvendt programmering ved NTNU, og har som mål å gi oss studenter praktisk erfaring med programmering, dataanalyse, datavisualisering, versjonskontroll og testing.
 

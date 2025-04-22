@@ -18,7 +18,7 @@ titles = {
 
 # 3. Sett opp figuren
 sns.set(style="whitegrid")
-fig, axes = plt.subplots(3, 1, figsize=(14, 12), sharex=True)
+fig, axes = plt.subplots(len(components), 1, figsize=(14, 12), sharex=True)
 fig.subplots_adjust(hspace=0.4)
 
 # 4. Plott hver komponent
@@ -30,8 +30,8 @@ for i, comp in enumerate(components):
 
     sns.regplot(data=data, x='x_temp', y=comp, ax=axes[i],
                 scatter_kws={"s": 12, "alpha": 0.6},
-                line_kws={"color": "crimson"}
-)
+                line_kws={"color": "crimson"},
+                lowess=True)
 
     # Datoetiketter i stedet for tall
     tick_step = max(1, int(len(data) / 8))

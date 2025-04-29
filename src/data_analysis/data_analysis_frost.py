@@ -37,6 +37,10 @@ df[columns_to_analyze] = imputer.fit_transform(df[columns_to_analyze])
 # 6. Beregn gjennomsnitt, median og standardavvik for hvert år og årstid
 agg_stats = df.groupby(['year', 'season'])[columns_to_analyze].agg(['mean', 'median', 'std'])
 
+# NYTT: Beregn statistikk per år (uavhengig av sesong)
+agg_stats_by_year = df.groupby('year')[columns_to_analyze].agg(['mean', 'median', 'std'])
+
+
 # 7. Beregn korrelasjonen mellom de relevante variablene
 correlation_matrix = df[columns_to_analyze].corr()
 
@@ -50,3 +54,5 @@ print(correlation_matrix)
 # 9. Eksporter de aggregerte statistikkene og korrelasjonen til CSV-filer under data
 agg_stats.to_csv('data/analyses_results/frost_aggregated_stats_year_season.csv')
 correlation_matrix.to_csv('data/analyses_results/frost_correlation_matrix.csv')
+agg_stats_by_year.to_csv('data/analyses_results/frost_aggregated_stats_year.csv')
+

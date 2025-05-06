@@ -30,9 +30,6 @@ df['year'] = df['dateTime'].dt.year
 # 3. Kolonnene for analyse
 columns_to_analyze = ['NO2', 'PM10', 'PM2.5']
 
-# 4. Bruk KNN-imputasjon for å håndtere manglende verdier
-imputer = KNNImputer(n_neighbors=100)  # Vi velger 100 her
-df[columns_to_analyze] = imputer.fit_transform(df[columns_to_analyze])
 
 # 5. Beregn gjennomsnitt, median og standardavvik for hvert år og årstid
 agg_stats_by_year_season = df.groupby(['year', 'season'])[columns_to_analyze].agg(['mean', 'median', 'std'])

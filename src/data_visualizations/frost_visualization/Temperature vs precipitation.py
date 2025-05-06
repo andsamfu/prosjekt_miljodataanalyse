@@ -1,21 +1,30 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import sqlite3
 
-# Last inn FROST-data
-frost = pd.read_csv("data/analyses_results/frost_aggregated_stats_year_season.csv", skiprows=2)
-frost.columns = [
-    'year', 'season',
-    'temperature_mean', 'temperature_median', 'temperature_std',
-    'precipitation_mean', 'precipitation_median', 'precipitation_std',
-    'wind_mean', 'wind_median', 'wind_std'
-]
+# 1. Laster inn daglig FROST-data
+conn = sqlite3.connect("data/clean/frost.db")
+df = pd.read_sql("SELECT referenceTime, mean_air_temperature, total_precipitation FROM weather_data", conn)
+conn.close()
 
-# Konverter verdier til numerisk (og håndter eventuelle feil)
-for col in frost.columns[2:]:
-    frost[col] = pd.to_numeric(frost[col], errors='coerce')
+df['referenceTime'] = pd.to_datetime(df['referenceTime'])
 
-# Farger per sesong
+# 2. Legger til sesong
+def get_season(month):
+    if month in [12, 1, 2]:
+        return 'Winter'
+    elif month in [3, 4, 5]:
+        return 'Spring'
+    elif month in [6, 7, 8]:
+        return 'Summer'
+    else:
+        return 'Fall'
+
+df['season'] = df['referenceTime'].dt.month.apply(get_season)
+df = df.dropna(subset=['mean_air_temperature', 'total_precipitation'])
+
+# 3. Fargevalg per sesong
 season_colors = {
     "Winter": "steelblue",
     "Spring": "mediumseagreen",
@@ -23,33 +32,49 @@ season_colors = {
     "Fall": "sienna"
 }
 
-# Regresjonsplot per sesong
+# 4. Regresjonsplot per sesong
 sns.set(style="whitegrid")
 fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-fig.suptitle("FROST – Temperatur vs Nedbør per sesong", fontsize=16, y=1.05)
+fig.suptitle("Daglig sammenheng mellom temperatur og nedbør per sesong (FROST)", fontsize=16, y=1.03)
 
 seasons = ["Winter", "Spring", "Summer", "Fall"]
 axes = axes.flatten()
 
+# 5. Tekster i hvert subplot
+explenation = {
+    "Winter": "Stigende linje = mer nedbør ved høyere temperatur",
+    "Spring": "Synkende linje = mindre nedbør ved høyere temperatur",
+    "Summer": "Synkende linje = mindre nedbør ved høyere temperatur",
+    "Fall": "Flat linje = ingen klar sammenheng"
+}
+
 for i, season in enumerate(seasons):
-    data = frost[frost['season'] == season].copy()
-    data = data.dropna(subset=["temperature_mean", "precipitation_mean"])
-
+    data = df[df['season'] == season]
+    
     sns.regplot(data=data,
-                x='temperature_mean',
-                y='precipitation_mean',
+                x='mean_air_temperature',
+                y='total_precipitation',
                 ax=axes[i],
-                color=season_colors[season],
-                scatter_kws={"s": 50})
+                scatter_kws={"s": 10, "alpha": 0.3},
+                line_kws={"color": season_colors[season], "lw": 2},
+                ci=95,
+                color=season_colors[season])
 
-    axes[i].set_title(f"{season}", fontsize=14)
+    axes[i].set_title(season, fontsize=14)
     axes[i].set_xlabel("Temperatur (°C)")
     axes[i].set_ylabel("Nedbør (mm)")
+    axes[i].grid(True)
 
-# Informativ undertittel
-plt.figtext(0.5, 0.97,
-            "Regresjonsmodeller per sesong: Temperatur vs nedbør (gjennomsnitt per år 2010–2019) - jo smalre skygge, jo større sammenheng",
+    #forklarende tekstboks
+    axes[i].text(0.05, 0.9, explenation[season],
+                 transform=axes[i].transAxes,
+                 fontsize=10, color="black",
+                 bbox=dict(facecolor="lightgrey", edgecolor="none", boxstyle="round,pad=0.4"))
+
+# 6. Forklarende undertittel
+plt.figtext(0.5, 0.965,
+            "Regresjonsmodeller basert på daglige verdier – temperatur vs nedbør per sesong",
             ha="center", fontsize=12, fontweight='bold')
 
-plt.tight_layout(rect=[0, 0, 1, 0.95]) 
+plt.tight_layout(rect=[0, 0, 1, 0.94])
 plt.show()

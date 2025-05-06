@@ -30,9 +30,6 @@ df['year'] = df['referenceTime'].dt.year
 # 4. Kolonnene for analyse (Temperatur, nedbør, vindhastighet)
 columns_to_analyze = ['mean_air_temperature', 'total_precipitation', 'mean_wind_speed']
 
-# 5. Bruk KNN-imputasjon for å håndtere manglende verdier
-imputer = KNNImputer(n_neighbors=100)  # Velger 100 naboer for imputasjon
-df[columns_to_analyze] = imputer.fit_transform(df[columns_to_analyze])
 
 # 6. Beregn gjennomsnitt, median og standardavvik for hvert år og årstid
 agg_stats = df.groupby(['year', 'season'])[columns_to_analyze].agg(['mean', 'median', 'std'])

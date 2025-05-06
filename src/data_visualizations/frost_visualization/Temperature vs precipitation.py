@@ -41,7 +41,7 @@ seasons = ["Winter", "Spring", "Summer", "Fall"]
 axes = axes.flatten()
 
 # 5. Tekster i hvert subplot
-slope_texts = {
+explenation = {
     "Winter": "Stigende linje = mer nedbør ved høyere temperatur",
     "Spring": "Synkende linje = mindre nedbør ved høyere temperatur",
     "Summer": "Synkende linje = mindre nedbør ved høyere temperatur",
@@ -66,7 +66,7 @@ for i, season in enumerate(seasons):
     axes[i].grid(True)
 
     #forklarende tekstboks
-    axes[i].text(0.05, 0.9, slope_texts[season],
+    axes[i].text(0.05, 0.9, explenation[season],
                  transform=axes[i].transAxes,
                  fontsize=10, color="black",
                  bbox=dict(facecolor="lightgrey", edgecolor="none", boxstyle="round,pad=0.4"))

@@ -1,33 +1,40 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import sqlite3
 
-# 1. Last inn NILU-data
-nilu = pd.read_csv("data/analyses_results/nilu_aggregated_stats_year_season.csv", skiprows=2)
-nilu.columns = [
-    'year', 'season',
-    'NO2_mean', 'NO2_median', 'NO2_std',
-    'PM10_mean', 'PM10_median', 'PM10_std',
-    'PM2.5_mean', 'PM2.5_median', 'PM2.5_std'
-]
-for col in nilu.columns[2:]:
-    nilu[col] = pd.to_numeric(nilu[col], errors='coerce')
+# 1. Last inn daglig NILU-data
+nilu = pd.read_json("data/clean/cleaned_data_nilu.json")
+nilu['dateTime'] = pd.to_datetime(nilu['dateTime'])
 
-# 2. Last inn FROST-data
-frost = pd.read_csv("data/analyses_results/frost_aggregated_stats_year_season.csv", skiprows=2)
-frost.columns = [
-    'year', 'season',
-    'temperature_mean', 'temperature_median', 'temperature_std',
-    'precipitation_mean', 'precipitation_median', 'precipitation_std',
-    'wind_mean', 'wind_median', 'wind_std'
-]
-for col in frost.columns[2:]:
-    frost[col] = pd.to_numeric(frost[col], errors='coerce')
+# 2. Last inn daglig FROST-data
+conn = sqlite3.connect("data/clean/frost.db")
+frost = pd.read_sql("SELECT referenceTime, mean_air_temperature FROM weather_data", conn)
+conn.close()
+frost['referenceTime'] = pd.to_datetime(frost['referenceTime'])
 
-# 3. Slå sammen datasett
-merged = pd.merge(nilu, frost, on=['year', 'season'])
+# 3. Merge på dato
+nilu['date'] = nilu['dateTime'].dt.date
+frost['date'] = frost['referenceTime'].dt.date
+merged = pd.merge(nilu, frost, on='date')
 
-# 4. Fargepalett (samme som tidligere)
+# 4. Legg til sesong
+def get_season(month):
+    if month in [12, 1, 2]:
+        return 'Winter'
+    elif month in [3, 4, 5]:
+        return 'Spring'
+    elif month in [6, 7, 8]:
+        return 'Summer'
+    else:
+        return 'Fall'
+
+merged['season'] = pd.to_datetime(merged['date']).dt.month.apply(get_season)
+
+# 5. Fjern manglende
+merged = merged.dropna(subset=['mean_air_temperature', 'PM2.5'])
+
+# 6. Sesongfarger og forklaringer
 season_colors = {
     "Winter": "steelblue",
     "Spring": "mediumseagreen",
@@ -35,26 +42,53 @@ season_colors = {
     "Fall": "sienna"
 }
 
-# 5. Regresjonsgraf per sesong
+explanations = {
+    "Winter": "Negativ trend: Høyere PM2.5 ved lavere temperaturer",
+    "Spring": "Svak positiv trend: Liten økning i PM2.5 ved økt temperatur",
+    "Summer": "Lite mønster: Svak og usikker positiv sammenheng",
+    "Fall":   "Negativ trend: PM2.5 synker svakt med høyere temperatur"
+}
+
+
+
+# 7. Plotting
 sns.set(style="whitegrid")
 fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-fig.suptitle("FROST + NILU – Temperatur vs NO₂ per sesong", fontsize=16, y=1.03)
+fig.suptitle("Daglig regresjon per sesong: Temperatur (FROST) vs PM2.5 (NILU)", fontsize=16, y=1.03)
 
 seasons = ["Winter", "Spring", "Summer", "Fall"]
 axes = axes.flatten()
 
 for i, season in enumerate(seasons):
     data = merged[merged['season'] == season]
-    sns.regplot(data=data, x='temperature_mean', y='NO2_mean', ax=axes[i],
-                color=season_colors[season], scatter_kws={"s": 50})
-    axes[i].set_title(f"{season}")
+    point_color = season_colors[season]
+
+    sns.regplot(
+        data=data,
+        x='mean_air_temperature',
+        y='PM2.5',
+        ax=axes[i],
+        scatter_kws={"s": 10, "alpha": 0.3, "color": point_color},
+        line_kws={"color": "crimson", "lw": 2},
+        color="crimson",
+        ci=95
+    )
+
+    axes[i].set_title(season)
     axes[i].set_xlabel("Temperatur (°C)")
-    axes[i].set_ylabel("NO₂ (µg/m³)")
+    axes[i].set_ylabel("PM₂.₅ (µg/m³)")
+    axes[i].grid(True)
 
+    # Forklaringsboks
+    axes[i].text(0.05, 0.9, explanations[season],
+                 transform=axes[i].transAxes,
+                 fontsize=10, color="black",
+                 bbox=dict(facecolor="lightgrey", edgecolor="none", boxstyle="round,pad=0.4"))
 
-plt.figtext(0.5, 0.97,
-            "Regresjonsmodeller som viser sammenhengen mellom temperatur (FROST) og NO2 nivåer (NILU) i ulike sesonger",
+# 8. Undertittel
+plt.figtext(0.5, 0.965,
+            "Regresjonsanalyse av daglige verdier: Sammenheng mellom temperatur (FROST) og PM2.5 (NILU) per sesong",
             ha="center", fontsize=12, fontweight='bold')
 
-plt.tight_layout(rect=[0, 0, 1, 0.95])
+plt.tight_layout(rect=[0, 0, 1, 0.94])
 plt.show()

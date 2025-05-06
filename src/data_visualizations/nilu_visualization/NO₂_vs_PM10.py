@@ -33,7 +33,7 @@ season_colors = {
 # 5. Lag regresjonsplott per sesong med rød linje
 sns.set(style="whitegrid")
 fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-fig.suptitle("NILU – Daglig sammenheng mellom NO₂ og PM₁₀ per sesong", fontsize=16, y=1.03)
+fig.suptitle("NILU – Daglig sammenheng mellom NO2 og PM10 per sesong", fontsize=16, y=1.03)
 
 seasons = ["Winter", "Spring", "Summer", "Fall"]
 axes = axes.flatten()
@@ -53,8 +53,8 @@ for i, season in enumerate(seasons):
     )
 
     axes[i].set_title(season, fontsize=14)
-    axes[i].set_xlabel("PM₁₀ (µg/m³)")
-    axes[i].set_ylabel("NO₂ (µg/m³)")
+    axes[i].set_xlabel("PM10 (µg/m³)")
+    axes[i].set_ylabel("NO2 (µg/m³)")
     axes[i].grid(True)
 
 # 6. Undertittel

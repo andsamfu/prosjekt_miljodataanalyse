@@ -8,36 +8,78 @@ from matplotlib.dates import YearLocator, DateFormatter
 import os
 
 def load_data(db_path):
+    """
+    Laster inn data fra SQLite-databasen.
 
+    Args:
+        db_path (str): Stien til SQLite-databasen.
+
+    Returns:
+        pd.DataFrame: DataFrame med værdata.
+    """
     conn = sqlite3.connect(db_path)
     df = pd.read_sql_query("SELECT * FROM weather_data", conn)
     conn.close()
     return df
 
 def preprocess_data(df):
+    """
+    Forbehandler data: konverterer datoer og lager nødvendige funksjoner.
 
+    Args:
+        df (pd.DataFrame): DataFrame med rådata.
+
+    Returns:
+        pd.DataFrame: DataFrame med forbehandlede data.
+    """
+    # Konverter datoer til datetime-format
     df['referenceTime'] = pd.to_datetime(df['referenceTime'])
+    # Sorter data etter dato
     df = df.sort_values('referenceTime')
+    # Legg til dag i året og måned som funksjoner
     df['DayOfYear'] = df['referenceTime'].dt.dayofyear
     df['Month'] = df['referenceTime'].dt.month
+    # Beregn sin og cos for årssykluser
     df['sin_day'] = np.sin(2 * np.pi * df['DayOfYear'] / 365)
     df['cos_day'] = np.cos(2 * np.pi * df['DayOfYear'] / 365)
     return df
 
 def split_data(df, split_ratio=0.75):
+    """
+    Deler data i treningssett og valideringssett.
 
+    Args:
+        df (pd.DataFrame): DataFrame med forbehandlede data.
+        split_ratio (float): Andel av data som skal brukes til trening.
+
+    Returns:
+        pd.DataFrame, pd.DataFrame: Treningssett og valideringssett.
+    """
     split_point = int(len(df) * split_ratio)
     return df[:split_point], df[split_point:]
 
 def create_future_features(df_future, end_year=2024):
+    """
+    Lager fremtidige funksjoner for prediksjon frem til et spesifikt år.
 
-    start_date = df_future['referenceTime'].iloc[0]  
-    end_date = pd.Timestamp(f"{end_year}-12-31") 
+    Args:
+        df_future (pd.DataFrame): Valideringssett.
+        end_year (int): Året prediksjonen skal stoppe (inkludert).
+
+    Returns:
+        pd.DataFrame: DataFrame med fremtidige funksjoner.
+    """
+    # Startdato er den første datoen i valideringssettet
+    start_date = df_future['referenceTime'].iloc[0]
+    # Sluttdato er slutten av det spesifiserte året
+    end_date = pd.Timestamp(f"{end_year}-12-31")
+    # Generer datoer mellom start- og sluttdato
     future_dates = pd.date_range(
         start=start_date,
         end=end_date,
         freq='D'
     )
+    # Lag DataFrame med fremtidige datoer og funksjoner
     future_df = pd.DataFrame({'referenceTime': future_dates})
     future_df['DayOfYear'] = future_df['referenceTime'].dt.dayofyear
     future_df['Month'] = future_df['referenceTime'].dt.month
@@ -46,20 +88,49 @@ def create_future_features(df_future, end_year=2024):
     return future_df
 
 def train_model(X_train, y_train):
+    """
+    Trener en lineær regresjonsmodell.
 
+    Args:
+        X_train (pd.DataFrame): Treningsfunksjoner.
+        y_train (pd.Series): Treningsmål.
+
+    Returns:
+        LinearRegression: Trenet modell.
+    """
     model = LinearRegression()
     model.fit(X_train, y_train)
     return model
 
 def evaluate_model(model, X_test, y_test):
+    """
+    Evaluerer modellen på testsettet.
 
+    Args:
+        model (LinearRegression): Trenet modell.
+        X_test (pd.DataFrame): Testfunksjoner.
+        y_test (pd.Series): Testmål.
+
+    Returns:
+        float, float, np.ndarray: Mean Squared Error, R²-score og prediksjoner.
+    """
     y_pred = model.predict(X_test)
     mse = mean_squared_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
     return mse, r2, y_pred
 
 def split_into_segments(dates, values, max_gap_days=31):
+    """
+    Deler data i segmenter for plotting.
 
+    Args:
+        dates (pd.Series): Tidsstempler.
+        values (pd.Series): Verdier som skal plottes.
+        max_gap_days (int): Maksimalt antall dager mellom punkter i samme segment.
+
+    Returns:
+        list, list: Lister over segmenterte datoer og verdier.
+    """
     if len(dates) == 0:
         return [], []
         
@@ -84,7 +155,15 @@ def split_into_segments(dates, values, max_gap_days=31):
     return segments_x, segments_y
 
 def plot_predictions(df_train, df_future, future_df, y_pred_extended):
- 
+    """
+    Plotter treningsdata, valideringsdata og prediksjoner.
+
+    Args:
+        df_train (pd.DataFrame): Treningssett.
+        df_future (pd.DataFrame): Valideringssett.
+        future_df (pd.DataFrame): Fremtidige funksjoner.
+        y_pred_extended (np.ndarray): Predikerte verdier for fremtidige data.
+    """
     plt.figure(figsize=(15, 6))
 
     # Plot treningsdata
@@ -95,7 +174,7 @@ def plot_predictions(df_train, df_future, future_df, y_pred_extended):
     for seg_x, seg_y in zip(segments_x, segments_y):
         plt.plot(seg_x, seg_y, color='blue', alpha=0.7, label='Trenings data')
 
-    # Plot fremtidsdata
+    # Plot valideringsdata
     mask_future_real = df_future['generated_mean_air_temperature'] == 0
     dates_future = df_future.loc[mask_future_real, 'referenceTime']
     temps_future = df_future.loc[mask_future_real, 'mean_air_temperature']
@@ -112,7 +191,7 @@ def plot_predictions(df_train, df_future, future_df, y_pred_extended):
     ax.xaxis.set_major_formatter(DateFormatter("%Y"))
 
     plt.xlabel('År')
-    plt.ylabel('Tempratur (°C)')
+    plt.ylabel('Temperatur (°C)')
     plt.title('Prediksjon av gjennomsnittlig lufttemperatur i Trondheim')
     plt.legend(loc='upper right')
     plt.grid(True, alpha=0.3)
@@ -121,7 +200,13 @@ def plot_predictions(df_train, df_future, future_df, y_pred_extended):
     plt.show()
 
 def main(db_path, end_year=2024):
+    """
+    Hovedfunksjon for å kjøre hele funksjonaliteten.
 
+    Args:
+        db_path (str): Stien til SQLite-databasen.
+        end_year (int): Året prediksjonen skal stoppe (inkludert).
+    """
     df = load_data(db_path)
     df = preprocess_data(df)
     df_train, df_future = split_data(df)
@@ -139,7 +224,7 @@ def main(db_path, end_year=2024):
 
     plot_predictions(df_train, df_future, future_df, y_pred_extended)
 
-# Hvis du vil kjøre koden direkte
 if __name__ == "__main__":
     db_path = os.path.join('data', 'clean', 'frost.db')
-    main(db_path)
+    main(db_path, end_year=2024)
+

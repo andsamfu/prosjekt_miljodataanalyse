@@ -53,6 +53,12 @@ def main():
     df = load_data(file_path)
     fig = create_figure(df)
     fig.show()
+    fig.update_layout(
+        hovermode="x unified",
+        legend_title_text='Variabel',
+        height=None,
+        width=None
+    )
 
 
 if __name__ == "__main__":

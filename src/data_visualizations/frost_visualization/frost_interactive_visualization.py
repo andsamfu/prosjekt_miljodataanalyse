@@ -2,87 +2,94 @@ import pandas as pd
 import plotly.express as px
 import sqlite3
 
-# Koble til SQLite-database og les inn data
-conn = sqlite3.connect('data/clean/frost.db')
-df = pd.read_sql('SELECT * FROM weather_data', conn)
-conn.close()
+def plot_seasonal_weather_from_sqlite(db_path: str, table_name: str = "weather_data"):
+    """
+    Leser værdata fra SQLite og visualiserer sesongvis utvikling av temperatur, nedbør og vindhastighet.
 
-# Konverterer 'referenceTime' til datetime-format
-df['referenceTime'] = pd.to_datetime(df['referenceTime'])
+    Parametre:
+    - db_path (str): Filsti til SQLite-database (f.eks. 'data/clean/frost.db')
+    - table_name (str): Navn på tabellen i databasen (default: 'weather_data')
+    """
 
-# Definer årstid basert på måned
-def get_season(month):
-    if month in [12, 1, 2]:
-        return 'Vinter'
-    elif month in [3, 4, 5]:
-        return 'Vår'
-    elif month in [6, 7, 8]:
-        return 'Sommer'
-    else:
-        return 'Høst'
+    # Hent data
+    conn = sqlite3.connect(db_path)
+    df = pd.read_sql(f'SELECT * FROM {table_name}', conn)
+    conn.close()
 
-# Legg til sesong og år
-df['season'] = df['referenceTime'].dt.month.apply(get_season)
-df['year'] = df['referenceTime'].dt.year
+    # Konverter dato
+    df['referenceTime'] = pd.to_datetime(df['referenceTime'])
+    df['year'] = df['referenceTime'].dt.year
 
-# Relevante kolonner
-columns_to_analyze = ['mean_air_temperature', 'total_precipitation', 'mean_wind_speed']
+    # Legg til sesong
+    def get_season(month):
+        if month in [12, 1, 2]:
+            return 'Vinter'
+        elif month in [3, 4, 5]:
+            return 'Vår'
+        elif month in [6, 7, 8]:
+            return 'Sommer'
+        else:
+            return 'Høst'
 
-# Fyll manglende verdier med median
-df[columns_to_analyze] = df[columns_to_analyze].fillna(df[columns_to_analyze].median())
+    df['season'] = df['referenceTime'].dt.month.apply(get_season)
 
-# Beregn snitt per sesong og år
-seasonal_avg = df.groupby(['year', 'season'])[columns_to_analyze].mean().reset_index()
+    # Aggreger sesongvis (uten å fylle ut manglende)
+    columns_to_analyze = ['mean_air_temperature', 'total_precipitation', 'mean_wind_speed']
+    seasonal_avg = df.groupby(['year', 'season'])[columns_to_analyze].mean(numeric_only=True).reset_index()
 
-# Gjør data langformat for plotting
-df_long = seasonal_avg.melt(id_vars=['year', 'season'], 
-                            value_vars=columns_to_analyze, 
-                            var_name='Pollutant', 
-                            value_name='Average')
+    # Langformat for plot
+    df_long = seasonal_avg.melt(
+        id_vars=['year', 'season'],
+        value_vars=columns_to_analyze,
+        var_name='Variabel',
+        value_name='Average'
+    )
 
-# Lag graf
-fig = px.line(df_long, 
-              x='year', 
-              y='Average', 
-              color='Pollutant', 
-              line_group='Pollutant',
-              facet_col='season', 
-              markers=True,
-              line_shape='spline',
-              title='Gjennomsnittlig temperatur, nedbør og vindhastighet per år og sesong (interaktiv)',
-              labels={'Average': 'Verdi', 'year': 'År'},
-              category_orders={"season": ["Vinter", "Vår", "Sommer", "Høst"]},
-              template='plotly_white')
+    # Plot
+    fig = px.line(
+        df_long,
+        x='year',
+        y='Average',
+        color='Variabel',
+        line_group='Variabel',
+        facet_col='season',
+        markers=True,
+        line_shape='spline',
+        title='Gjennomsnittlig temperatur, nedbør og vindhastighet per år og sesong (interaktiv)',
+        labels={'Average': 'Verdi', 'year': 'År'},
+        category_orders={"season": ["Vinter", "Vår", "Sommer", "Høst"]},
+        template='plotly_white'
+    )
 
-fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
+    fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
 
-# Juster x-akse for alle subplot
-years = sorted(df_long['year'].unique())
-for axis in fig.layout:
-    if axis.startswith('xaxis'):
-        fig.layout[axis].update(
-            tickmode='array',
-            tickvals=years,
-            tickangle=45,
-            tickfont=dict(size=9)
-        )
+    # Juster x-aksene
+    years = sorted(df_long['year'].unique())
+    for axis in fig.layout:
+        if axis.startswith('xaxis'):
+            fig.layout[axis].update(
+                tickmode='array',
+                tickvals=years,
+                tickangle=45,
+                tickfont=dict(size=9)
+            )
 
-# Oppsett og layout
-fig.update_layout(
-    plot_bgcolor='#e0e0e0',
-    paper_bgcolor='#e0e0e0',
-    hovermode="x unified",
-    legend_title_text='Variabel',
-    height=500,
-    width=None,
-    legend=dict(
-        orientation='h',
-        yanchor='bottom',
-        y=1.05,
-        xanchor='center',
-        x=0.5
-    ),
-    title_x=0.5
-)
+    # Layout
+    fig.update_layout(
+        plot_bgcolor='#e0e0e0',
+        paper_bgcolor='#e0e0e0',
+        hovermode="x unified",
+        legend_title_text='Variabel',
+        height=500,
+        width=None,
+        legend=dict(
+            orientation='h',
+            yanchor='bottom',
+            y=1.05,
+            xanchor='center',
+            x=0.5
+        ),
+        title_x=0.5
+    )
 
-fig.show()
+    fig.show()

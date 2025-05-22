@@ -34,3 +34,13 @@ def train_nilu_model(df_train, target_variable):
     model.fit(X_train, y_train)
     
     return model
+
+def evaluate_nilu_model(model, df_future, target_variable):
+    X_test = df_future[['DayOfYear', 'Month', 'sin_day', 'cos_day']]
+    y_test = df_future[target_variable]
+    y_pred = model.predict(X_test)
+    
+    mse = mean_squared_error(y_test, y_pred)
+    r2 = r2_score(y_test, y_pred)
+    
+    return mse, r2, y_test, y_pred

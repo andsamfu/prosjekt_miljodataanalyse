@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
 
 def load_and_prepare_nilu_data(json_file_path):
 
@@ -23,3 +25,12 @@ def split_nilu_data(df, split_ratio=0.75):
     df_train = df[:split_point]
     df_future = df[split_point:]
     return df_train, df_future
+
+def train_nilu_model(df_train, target_variable):
+    X_train = df_train[['DayOfYear', 'Month', 'sin_day', 'cos_day']]
+    y_train = df_train[target_variable]
+    
+    model = LinearRegression()
+    model.fit(X_train, y_train)
+    
+    return model

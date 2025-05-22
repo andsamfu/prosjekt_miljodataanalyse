@@ -22,14 +22,13 @@ df['month_num'] = df['dateTime'].dt.month
 # Sortere for riktig månedrekkefølge
 df = df.sort_values('month_num')
 
-# Bruke hele datasettet
-df_clean = df.copy()
-
 # Lage boxplot
 plt.figure(figsize=(12, 6))
-sns.boxplot(data=df_clean, x='month', y='NO2', palette='YlOrBr')
-plt.title("Boxplot av måndelige NO₂-nivå (μg/m³)")
-plt.xlabel("Month")
+# Bruk fliersize=0 for å ikke vise outliers i plottet
+# Endret palette til 'Blues' for kun blå farger
+sns.boxplot(data=df, x='month', y='NO2', palette='Blues', fliersize=0)
+plt.title("Boxplot av månedlige NO₂-nivå (μg/m³)")
+plt.xlabel("Måned")
 plt.ylabel("NO₂ (μg/m³)")
 plt.tight_layout()
 plt.show()

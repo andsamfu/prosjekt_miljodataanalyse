@@ -1,72 +1,136 @@
 import sqlite3
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
 import matplotlib.pyplot as plt
+from matplotlib.dates import YearLocator, DateFormatter
 import os
 
-# Load data from the SQLite database
-db_path = os.path.join('data', 'clean', 'frost.db')
-conn = sqlite3.connect(db_path)
-df = pd.read_sql_query("SELECT * FROM weather_data", conn)
-conn.close()
+def load_data(db_path):
+    """
+    Laster inn data fra SQLite-databasen.
 
-# Convert date and create features
-df['referenceTime'] = pd.to_datetime(df['referenceTime'])
-df = df.sort_values('referenceTime')
+    Args:
+        db_path (str): Stien til SQLite-databasen.
 
-# Create all necessary features
-df['DayOfYear'] = df['referenceTime'].dt.dayofyear
-df['Month'] = df['referenceTime'].dt.month
-df['sin_day'] = np.sin(2 * np.pi * df['DayOfYear']/365)
-df['cos_day'] = np.cos(2 * np.pi * df['DayOfYear']/365)
+    Returns:
+        pd.DataFrame: DataFrame med værdata.
+    """
+    conn = sqlite3.connect(db_path)
+    df = pd.read_sql_query("SELECT * FROM weather_data", conn)
+    conn.close()
+    return df
 
-# Calculate the split point at 3/4 of the data
-split_point = int(len(df) * 0.75)
-df_train = df[:split_point]
-df_future = df[split_point:]
+def preprocess_data(df):
+    """
+    Forbehandler data: konverterer datoer og lager nødvendige funksjoner.
 
-# Calculate how many years of future data we have
-future_years = (df_future['referenceTime'].max() - df_future['referenceTime'].min()).days / 365.25
+    Args:
+        df (pd.DataFrame): DataFrame med rådata.
 
-# Create features for training data
-X_train = df_train[['DayOfYear', 'Month', 'sin_day', 'cos_day']]
-y_train = df_train['mean_air_temperature']
+    Returns:
+        pd.DataFrame: DataFrame med forbehandlede data.
+    """
+    # Konverter datoer til datetime-format
+    df['referenceTime'] = pd.to_datetime(df['referenceTime'])
+    # Sorter data etter dato
+    df = df.sort_values('referenceTime')
+    # Legg til dag i året og måned som funksjoner
+    df['DayOfYear'] = df['referenceTime'].dt.dayofyear
+    df['Month'] = df['referenceTime'].dt.month
+    # Beregn sin og cos for årssykluser
+    df['sin_day'] = np.sin(2 * np.pi * df['DayOfYear'] / 365)
+    df['cos_day'] = np.cos(2 * np.pi * df['DayOfYear'] / 365)
+    return df
 
-# Create features for future prediction (including beyond available data)
-last_date = df_future['referenceTime'].iloc[-1]
-future_dates = pd.date_range(
-    start=df_future['referenceTime'].iloc[0],
-    end=last_date + pd.DateOffset(years=int(future_years)),
-    freq='D'
-)
+def split_data(df, split_ratio=0.75):
+    """
+    Deler data i treningssett og valideringssett.
 
-# Create future features DataFrame
-future_df = pd.DataFrame({'referenceTime': future_dates})
-future_df['DayOfYear'] = future_df['referenceTime'].dt.dayofyear
-future_df['Month'] = future_df['referenceTime'].dt.month
-future_df['sin_day'] = np.sin(2 * np.pi * future_df['DayOfYear']/365)
-future_df['cos_day'] = np.cos(2 * np.pi * future_df['DayOfYear']/365)
+    Args:
+        df (pd.DataFrame): DataFrame med forbehandlede data.
+        split_ratio (float): Andel av data som skal brukes til trening.
 
-# Train the model and make predictions
-model = LinearRegression()
-model.fit(X_train, y_train)
-X_future_extended = future_df[['DayOfYear', 'Month', 'sin_day', 'cos_day']]
-y_pred_extended = model.predict(X_future_extended)
+    Returns:
+        pd.DataFrame, pd.DataFrame: Treningssett og valideringssett.
+    """
+    split_point = int(len(df) * split_ratio)
+    return df[:split_point], df[split_point:]
 
-# Evaluate the model on the known future period
-X_future_known = df_future[['DayOfYear', 'Month', 'sin_day', 'cos_day']]
-y_pred_known = model.predict(X_future_known)
-mse = mean_squared_error(df_future['mean_air_temperature'], y_pred_known)
-r2 = r2_score(df_future['mean_air_temperature'], y_pred_known)
+def create_future_features(df_future, end_year=2024):
+    """
+    Lager fremtidige funksjoner for prediksjon frem til et spesifikt år.
 
-# Create the time series plot
-plt.figure(figsize=(15, 6))
+    Args:
+        df_future (pd.DataFrame): Valideringssett.
+        end_year (int): Året prediksjonen skal stoppe (inkludert).
 
-# Function to split data into continuous segments
+    Returns:
+        pd.DataFrame: DataFrame med fremtidige funksjoner.
+    """
+    # Startdato er den første datoen i valideringssettet
+    start_date = df_future['referenceTime'].iloc[0]
+    # Sluttdato er slutten av det spesifiserte året
+    end_date = pd.Timestamp(f"{end_year}-12-31")
+    # Generer datoer mellom start- og sluttdato
+    future_dates = pd.date_range(
+        start=start_date,
+        end=end_date,
+        freq='D'
+    )
+    # Lag DataFrame med fremtidige datoer og funksjoner
+    future_df = pd.DataFrame({'referenceTime': future_dates})
+    future_df['DayOfYear'] = future_df['referenceTime'].dt.dayofyear
+    future_df['Month'] = future_df['referenceTime'].dt.month
+    future_df['sin_day'] = np.sin(2 * np.pi * future_df['DayOfYear'] / 365)
+    future_df['cos_day'] = np.cos(2 * np.pi * future_df['DayOfYear'] / 365)
+    return future_df
+
+def train_model(X_train, y_train):
+    """
+    Trener en lineær regresjonsmodell.
+
+    Args:
+        X_train (pd.DataFrame): Treningsfunksjoner.
+        y_train (pd.Series): Treningsmål.
+
+    Returns:
+        LinearRegression: Trenet modell.
+    """
+    model = LinearRegression()
+    model.fit(X_train, y_train)
+    return model
+
+def evaluate_model(model, X_test, y_test):
+    """
+    Evaluerer modellen på testsettet.
+
+    Args:
+        model (LinearRegression): Trenet modell.
+        X_test (pd.DataFrame): Testfunksjoner.
+        y_test (pd.Series): Testmål.
+
+    Returns:
+        float, float, np.ndarray: Mean Squared Error, R²-score og prediksjoner.
+    """
+    y_pred = model.predict(X_test)
+    mse = mean_squared_error(y_test, y_pred)
+    r2 = r2_score(y_test, y_pred)
+    return mse, r2, y_pred
+
 def split_into_segments(dates, values, max_gap_days=31):
+    """
+    Deler data i segmenter for plotting.
+
+    Args:
+        dates (pd.Series): Tidsstempler.
+        values (pd.Series): Verdier som skal plottes.
+        max_gap_days (int): Maksimalt antall dager mellom punkter i samme segment.
+
+    Returns:
+        list, list: Lister over segmenterte datoer og verdier.
+    """
     if len(dates) == 0:
         return [], []
         
@@ -85,74 +149,82 @@ def split_into_segments(dates, values, max_gap_days=31):
         current_x.append(dates.iloc[i])
         current_y.append(values.iloc[i])
     
-    if current_x:  # Add the last segment if it exists
+    if current_x: 
         segments_x.append(current_x)
         segments_y.append(current_y)
     return segments_x, segments_y
 
-# Plot training data (blue for real, red for generated)
-mask_train_real = df_train['generated_mean_air_temperature'] == 0
-mask_train_generated = df_train['generated_mean_air_temperature'] == 1
+def plot_predictions(df_train, df_future, future_df, y_pred_extended):
+    """
+    Plotter treningsdata, valideringsdata og prediksjoner.
 
-# Plot real training data segments
-dates_real = df_train.loc[mask_train_real, 'referenceTime']
-temps_real = df_train.loc[mask_train_real, 'mean_air_temperature']
-segments_x, segments_y = split_into_segments(dates_real, temps_real)
-for seg_x, seg_y in zip(segments_x, segments_y):
-    plt.plot(seg_x, seg_y, color='blue', alpha=0.7)
-if len(dates_real) > 0:  # Only add to legend if there's data
-    plt.plot([], [], color='blue', label='Training Data', alpha=0.7)
+    Args:
+        df_train (pd.DataFrame): Treningssett.
+        df_future (pd.DataFrame): Valideringssett.
+        future_df (pd.DataFrame): Fremtidige funksjoner.
+        y_pred_extended (np.ndarray): Predikerte verdier for fremtidige data.
+    """
+    plt.figure(figsize=(15, 6))
 
-# Plot generated training data segments
-dates_gen = df_train.loc[mask_train_generated, 'referenceTime']
-temps_gen = df_train.loc[mask_train_generated, 'mean_air_temperature']
-segments_x, segments_y = split_into_segments(dates_gen, temps_gen)
-for seg_x, seg_y in zip(segments_x, segments_y):
-    plt.plot(seg_x, seg_y, color='red', alpha=0.7)
-if len(dates_gen) > 0:  # Only add to legend if there's data
-    plt.plot([], [], color='red', label='Generated Data', alpha=0.7)
+    # Plot treningsdata
+    mask_train_real = df_train['generated_mean_air_temperature'] == 0
+    dates_real = df_train.loc[mask_train_real, 'referenceTime']
+    temps_real = df_train.loc[mask_train_real, 'mean_air_temperature']
+    segments_x, segments_y = split_into_segments(dates_real, temps_real)
+    for seg_x, seg_y in zip(segments_x, segments_y):
+        plt.plot(seg_x, seg_y, color='blue', alpha=0.7, label='Trenings data')
 
-# Plot future data segments (green for real, red for generated)
-mask_future_real = df_future['generated_mean_air_temperature'] == 0
-mask_future_generated = df_future['generated_mean_air_temperature'] == 1
+    # Plot valideringsdata
+    mask_future_real = df_future['generated_mean_air_temperature'] == 0
+    dates_future = df_future.loc[mask_future_real, 'referenceTime']
+    temps_future = df_future.loc[mask_future_real, 'mean_air_temperature']
+    segments_x, segments_y = split_into_segments(dates_future, temps_future)
+    for seg_x, seg_y in zip(segments_x, segments_y):
+        plt.plot(seg_x, seg_y, color='green', alpha=0.7, label='Validerings data')
 
-# Plot real future data segments
-dates_future = df_future.loc[mask_future_real, 'referenceTime']
-temps_future = df_future.loc[mask_future_real, 'mean_air_temperature']
-segments_x, segments_y = split_into_segments(dates_future, temps_future)
-for seg_x, seg_y in zip(segments_x, segments_y):
-    plt.plot(seg_x, seg_y, color='green', alpha=0.7)
-if len(dates_future) > 0:  # Only add to legend if there's data
-    plt.plot([], [], color='green', label='Actual Future', alpha=0.7)
+    # Plot prediksjoner
+    plt.plot(future_df['referenceTime'], y_pred_extended, color='orange', linestyle='--', linewidth=2, label='Predikert data')
 
-# Plot generated future data segments
-dates_future_gen = df_future.loc[mask_future_generated, 'referenceTime']
-temps_future_gen = df_future.loc[mask_future_generated, 'mean_air_temperature']
-segments_x, segments_y = split_into_segments(dates_future_gen, temps_future_gen)
-for seg_x, seg_y in zip(segments_x, segments_y):
-    plt.plot(seg_x, seg_y, color='red', alpha=0.7)
+    # Formater X-aksen for å vise hvert år
+    ax = plt.gca()
+    ax.xaxis.set_major_locator(YearLocator())
+    ax.xaxis.set_major_formatter(DateFormatter("%Y"))
 
-# Plot predictions
-plt.plot(future_df['referenceTime'], y_pred_extended,
-         color='orange', label='Predicted Future',
-         linestyle='--', linewidth=2, alpha=1)
+    plt.xlabel('År')
+    plt.ylabel('Temperatur (°C)')
+    plt.title('Prediksjon av gjennomsnittlig lufttemperatur i Trondheim')
+    plt.legend(loc='upper right')
+    plt.grid(True, alpha=0.3)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
 
-plt.xlabel('Date')
-plt.ylabel('Temperature (°C)')
-plt.title('Temperature Prediction Model')
-plt.legend(loc='upper right')
-plt.grid(True, alpha=0.3)
-plt.xticks(rotation=45)
-plt.tight_layout()
-plt.show()
+def main(db_path, end_year=2024):
+    """
+    Hovedfunksjon for å kjøre hele funksjonaliteten.
 
-print("Model Performance:")
-print(f"Mean Squared Error: {mse:.2f}")
-print(f"R² Score: {r2:.2f}")
+    Args:
+        db_path (str): Stien til SQLite-databasen.
+        end_year (int): Året prediksjonen skal stoppe (inkludert).
+    """
+    df = load_data(db_path)
+    df = preprocess_data(df)
+    df_train, df_future = split_data(df)
+    future_df = create_future_features(df_future, end_year=end_year)
 
-# Print model coefficients
-feature_names = ['DayOfYear', 'Month', 'sin_day', 'cos_day']
-print("\nModel Coefficients:")
-for feature, coef in zip(feature_names, model.coef_):
-    print(f"{feature}: {coef:.4f}")
-print(f"Intercept: {model.intercept_:.4f}")
+    X_train = df_train[['DayOfYear', 'Month', 'sin_day', 'cos_day']]
+    y_train = df_train['mean_air_temperature']
+    model = train_model(X_train, y_train)
+
+    X_future_extended = future_df[['DayOfYear', 'Month', 'sin_day', 'cos_day']]
+    y_pred_extended = model.predict(X_future_extended)
+
+    mse, r2, _ = evaluate_model(model, df_future[['DayOfYear', 'Month', 'sin_day', 'cos_day']], df_future['mean_air_temperature'])
+    print(f"Modellens ytelse::\nMean Squared Error: {mse:.2f}\nR² Score: {r2:.2f}")
+
+    plot_predictions(df_train, df_future, future_df, y_pred_extended)
+
+if __name__ == "__main__":
+    db_path = os.path.join('data', 'clean', 'frost.db')
+    main(db_path, end_year=2024)
+

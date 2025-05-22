@@ -17,3 +17,9 @@ def load_and_prepare_nilu_data(json_file_path):
     df['cos_day'] = np.cos(2 * np.pi * df['DayOfYear'] / 365)
     
     return df
+
+def split_nilu_data(df, split_ratio=0.75):
+    split_point = int(len(df) * split_ratio)
+    df_train = df[:split_point]
+    df_future = df[split_point:]
+    return df_train, df_future

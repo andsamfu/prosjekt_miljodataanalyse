@@ -31,8 +31,8 @@ def split_data(df, split_ratio=0.75):
 
 def create_future_features(df_future, end_year=2024):
 
-    start_date = df_future['referenceTime'].iloc[0]  # Startdato for valideringsdata
-    end_date = pd.Timestamp(f"{end_year}-12-31")  # Sluttdato for prediksjon
+    start_date = df_future['referenceTime'].iloc[0]  
+    end_date = pd.Timestamp(f"{end_year}-12-31") 
     future_dates = pd.date_range(
         start=start_date,
         end=end_date,
@@ -93,7 +93,7 @@ def plot_predictions(df_train, df_future, future_df, y_pred_extended):
     temps_real = df_train.loc[mask_train_real, 'mean_air_temperature']
     segments_x, segments_y = split_into_segments(dates_real, temps_real)
     for seg_x, seg_y in zip(segments_x, segments_y):
-        plt.plot(seg_x, seg_y, color='blue', alpha=0.7, label='Training Data')
+        plt.plot(seg_x, seg_y, color='blue', alpha=0.7, label='Trenings data')
 
     # Plot fremtidsdata
     mask_future_real = df_future['generated_mean_air_temperature'] == 0
@@ -101,19 +101,19 @@ def plot_predictions(df_train, df_future, future_df, y_pred_extended):
     temps_future = df_future.loc[mask_future_real, 'mean_air_temperature']
     segments_x, segments_y = split_into_segments(dates_future, temps_future)
     for seg_x, seg_y in zip(segments_x, segments_y):
-        plt.plot(seg_x, seg_y, color='green', alpha=0.7, label='Actual Future')
+        plt.plot(seg_x, seg_y, color='green', alpha=0.7, label='Validerings data')
 
     # Plot prediksjoner
-    plt.plot(future_df['referenceTime'], y_pred_extended, color='orange', linestyle='--', linewidth=2, label='Predicted Future')
+    plt.plot(future_df['referenceTime'], y_pred_extended, color='orange', linestyle='--', linewidth=2, label='Predikert data')
 
     # Formater X-aksen for å vise hvert år
     ax = plt.gca()
     ax.xaxis.set_major_locator(YearLocator())
     ax.xaxis.set_major_formatter(DateFormatter("%Y"))
 
-    plt.xlabel('Date')
-    plt.ylabel('Temperature (°C)')
-    plt.title('Temperature Prediction Model')
+    plt.xlabel('År')
+    plt.ylabel('Tempratur (°C)')
+    plt.title('Prediksjon av gjennomsnittlig lufttemperatur i Trondheim')
     plt.legend(loc='upper right')
     plt.grid(True, alpha=0.3)
     plt.xticks(rotation=45)

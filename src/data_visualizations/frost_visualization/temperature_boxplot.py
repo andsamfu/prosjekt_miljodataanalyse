@@ -16,10 +16,9 @@ df = df.sort_values('month_num')
 
 # Lager boxplot
 plt.figure(figsize=(12, 6))
-sns.boxplot(data=df, x='month', y='mean_air_temperature', palette='coolwarm')
+sns.boxplot(data=df, x='month', y='mean_air_temperature', palette='coolwarm', fliersize=0)
 plt.title("Boxplot av daglig middeltemperatur per måned")
 plt.xlabel("Måned")
 plt.ylabel("Temperatur (°C)")
 plt.tight_layout()
 plt.show()
-

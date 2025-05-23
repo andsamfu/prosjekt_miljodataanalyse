@@ -141,9 +141,13 @@ class ImputationValidator:
             still_missing = df_cleaned[column].isna()
             if still_missing.any():
                 imputer = KNNImputer(n_neighbors=self.n_neighbors)
-                df_cleaned.loc[still_missing, column] = imputer.fit_transform(
-                    df_cleaned[['day_of_year', column]].values
-                )[still_missing]
+                # Prepare data for imputation
+                imputation_data = df_cleaned[['day_of_year', column]].copy()
+                imputation_data[column] = imputation_data[column].fillna(0)  # Fill NaNs with 0 for KNN
+                imputed_values = imputer.fit_transform(imputation_data)
+                
+                # Assign the imputed values back to the DataFrame
+                df_cleaned.loc[still_missing, column] = imputed_values[still_missing, 1]  # Get the imputed values for the specific column
         
         # Remove temporary columns
         df_cleaned = df_cleaned.drop(['day_of_year', 'year'], axis=1)

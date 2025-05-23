@@ -1,22 +1,29 @@
 import sys
+import os
 import pandas as pd
 import json
-import os
 import numpy as np
 from sklearn.impute import KNNImputer
-
-# Definer prosjektets rotkatalog
-project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from data_validators import OutlierValidator, ImputationValidator, DateContinuityValidator
 
 # Filsti til JSON-filene
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 raw_json_file = os.path.join(project_root, 'data', 'raw', 'api_nilu_air_quality.json')
 cleaned_json_file = os.path.join(project_root, 'data', 'clean', 'cleaned_data_nilu.json')
 
 # Kolonnen som skal fjernes
 column_to_remove = 'Benzo(a)pyrene in PM10 (aerosol)'
 
-# Funksjon for å laste inn JSON-fil og returnere data
 def load_json(file_path):
+    """
+    Laster inn en JSON-fil og returnerer dataen.
+
+    Args:
+        file_path (str): Filstien til JSON-filen.
+
+    Returns:
+        list: Dataen fra JSON-filen som en liste.
+    """
     try:
         with open(file_path, 'r') as file:
             data = json.load(file)
@@ -29,58 +36,80 @@ def load_json(file_path):
         print(f"JSON-filen '{file_path}' har feil format.")
         return []
 
-# Funksjon for å bygge en DataFrame fra JSON-data
 def build_dataframe(data):
+    """
+    Bygger en pandas DataFrame fra JSON-data.
+
+    Args:
+        data (list): Dataen fra JSON-filen.
+
+    Returns:
+        pd.DataFrame: En DataFrame med dataen.
+    """
     df_all = pd.DataFrame()
     for entry in data:
-        component = entry.get('component', 'Unknown')
-        values = entry.get('values', [])
-        df_component = pd.json_normalize(values)
-        df_component['component'] = component
-        df_all = pd.concat([df_all, df_component], ignore_index=True)
+        component = entry.get('component', 'Unknown')  # Henter komponentnavn
+        values = entry.get('values', [])  # Henter verdier
+        df_component = pd.json_normalize(values)  # Normaliserer JSON-data
+        df_component['component'] = component  # Legger til komponentnavn
+        df_all = pd.concat([df_all, df_component], ignore_index=True)  # Kombinerer data
     return df_all
 
-# Funksjon for å fjerne outliers
-def remove_outliers(df, num_std=4):
-    outliers_removed = {}
-    for column in df.columns:
-        mean = df[column].mean()
-        std = df[column].std()
-        lower_bound = mean - num_std * std
-        upper_bound = mean + num_std * std
-        outliers_removed[column] = ((df[column] < lower_bound) | (df[column] > upper_bound)).sum()
-        df[column] = df[column].where((df[column] >= lower_bound) & (df[column] <= upper_bound), np.nan)
-    return df, outliers_removed
-
-# Funksjon for å fylle inn manglende verdier med KNN-imputasjon
-def impute_missing_values(df, n_neighbors):
-    imputer = KNNImputer(n_neighbors=n_neighbors)
-    df_imputed = pd.DataFrame(imputer.fit_transform(df), columns=df.columns, index=df.index)
-    return df_imputed
-
-# Funksjon for å rense dataen
 def clean_data(df_all, column_to_remove, num_std, n_neighbors):
-    df_all['dateTime'] = pd.to_datetime(df_all['dateTime'])
-    df_pivot = df_all.pivot_table(index='dateTime', columns='component', values='value')
+    """
+    Renser dataen ved å fjerne outliers, fylle inn manglende datoer og imputere manglende verdier.
 
+    Args:
+        df_all (pd.DataFrame): DataFrame med rådata.
+        column_to_remove (str): Kolonnen som skal fjernes.
+        num_std (int): Antall standardavvik for å definere outliers.
+        n_neighbors (int): Antall naboer for KNN-imputasjon.
+
+    Returns:
+        tuple: En tuple med den rensede DataFrame og informasjon om fjernede outliers.
+    """
+    # Konverterer 'dateTime' til datetime-format
+    df_all['dateTime'] = pd.to_datetime(df_all['dateTime'])
+
+    # Kopierer 'dateTime' til 'referenceTime' for kompatibilitet med validatorene
+    df_all['referenceTime'] = df_all['dateTime']
+
+    # Lager en pivot-tabell
+    df_pivot = df_all.pivot_table(index='dateTime', columns='component', values='value')
+    df_pivot = df_pivot.reset_index()  # Beholder 'dateTime' som en kolonne
+    df_pivot['referenceTime'] = df_pivot['dateTime']  # Kopierer 'dateTime' til 'referenceTime'
+
+    # Fjerner spesifisert kolonne
     if column_to_remove in df_pivot.columns:
         df_pivot.drop(columns=[column_to_remove], inplace=True)
 
-    df_pivot, outliers_removed = remove_outliers(df_pivot, num_std=num_std)
-    all_dates = pd.date_range(start=df_pivot.index.min(), end=df_pivot.index.max(), freq='D')
-    df_pivot = df_pivot.reindex(all_dates)
+    # Fjerner outliers ved hjelp av OutlierValidator
+    valid_ranges = {col: (df_pivot[col].mean() - num_std * df_pivot[col].std(),
+                          df_pivot[col].mean() + num_std * df_pivot[col].std()) for col in df_pivot.columns if col not in ['dateTime', 'referenceTime']}
+    outlier_validator = OutlierValidator(valid_ranges)
+    outliers_removed, df_pivot = outlier_validator.validate(df_pivot)
 
-    df_before_imputation = df_pivot.copy()
-    df_pivot_imputed = impute_missing_values(df_pivot, n_neighbors=n_neighbors)
+    # Fyller inn manglende datoer ved hjelp av DateContinuityValidator
+    date_validator = DateContinuityValidator()
+    missing_dates, df_pivot = date_validator.validate(df_pivot, date_column='referenceTime')
 
-    for column in df_pivot.columns:
-        df_pivot_imputed[f'generated_{column}'] = np.isnan(df_before_imputation[column])
+    # Fyller inn manglende verdier ved hjelp av ImputationValidator
+    imputation_validator = ImputationValidator(n_neighbors=n_neighbors)
+    imputation_info, df_pivot = imputation_validator.validate(df_pivot)
 
-    df_pivot_imputed[df_pivot.columns] = df_pivot_imputed[df_pivot.columns].round(4)
-    return df_pivot_imputed, outliers_removed
+    return df_pivot, outliers_removed
 
-# Funksjon for å skrive ut informasjon om datasettet
 def print_dataset_info(df_pivot, outliers_removed):
+    """
+    Skriver ut informasjon om datasettet.
+
+    Args:
+        df_pivot (pd.DataFrame): Den rensede DataFrame.
+        outliers_removed (dict): Informasjon om fjernede outliers.
+
+    Returns:
+        dict: Informasjon om datasettet.
+    """
     generated_counts = {col: int(df_pivot[col].sum()) for col in df_pivot.columns if col.startswith('generated_')}
     info = {
         "Antall rader": len(df_pivot),
@@ -88,7 +117,7 @@ def print_dataset_info(df_pivot, outliers_removed):
         "Outliers fjernet per kolonne": outliers_removed
     }
 
-    print("\n=== Dataset Information ===")
+    print("Dataset informasjon:\n")
     print(f"Antall rader i datasettet: {info['Antall rader']}")
     print("\nGenererte verdier per kolonne:")
     for col, count in info["Genererte verdier per kolonne"].items():
@@ -96,36 +125,80 @@ def print_dataset_info(df_pivot, outliers_removed):
     print("\nAntall outliers fjernet per kolonne:")
     for col, count in info["Outliers fjernet per kolonne"].items():
         print(f"  - {col}: {count} outliers fjernet")
-    print("===========================\n")
 
     return info
 
-# Funksjon for å lagre den rensede dataen i en JSON-fil
 def save_cleaned_data(df_pivot, file_path):
+    """
+    Lagrer den rensede dataen i en JSON-fil.
+
+    Args:
+        df_pivot (pd.DataFrame): Den rensede DataFrame.
+        file_path (str): Filstien for lagring av dataen.
+    """
     try:
-        df_pivot.reset_index(inplace=True)
-        df_pivot.rename(columns={'index': 'dateTime'}, inplace=True)
-        df_pivot['dateTime'] = df_pivot['dateTime'].dt.strftime('%Y-%m-%d')
+        # Sjekk om DataFrame er tom
+        if df_pivot.empty:
+            print("Advarsel: DataFrame er tom. Ingen data å lagre.")
+            return
 
-        data_to_save = df_pivot.to_dict(orient='records')
-        for record in data_to_save:
-            for key, value in record.items():
+        # Lag en kopi av dataframe for å unngå modifikasjoner på original
+        df_to_save = df_pivot.copy()
+        
+        # Sørg for at dateTime er i riktig format og er unik
+        if 'dateTime' in df_to_save.columns:
+            df_to_save['dateTime'] = pd.to_datetime(df_to_save['dateTime'])
+
+            # Sjekk for duplikater og fjern dem
+            duplicates = df_to_save[df_to_save['dateTime'].duplicated()]
+            if not duplicates.empty:
+                df_to_save = df_to_save.drop_duplicates(subset=['dateTime'], keep='first')
+            df_to_save['dateTime'] = df_to_save['dateTime'].dt.strftime('%Y-%m-%d')
+
+        # Fjern referenceTime hvis den finnes siden vi allerede har dateTime
+        if 'referenceTime' in df_to_save.columns:
+            df_to_save = df_to_save.drop('referenceTime', axis=1)
+
+        # Fjern eventuelle problematiske kolonner som kan forårsake dupliserte nøkler
+        problematic_columns = ['index', 'level_0']
+        for col in problematic_columns:
+            if col in df_to_save.columns:
+                df_to_save = df_to_save.drop(col, axis=1)
+        
+        # Konverter DataFrame til liste av dictionaries
+        print("\nKonverterer data til JSON format...")
+        data_to_save = []
+        for idx, row in df_to_save.iterrows():
+            row_dict = {}
+            for column in df_to_save.columns:
+                value = row[column]
                 if pd.isna(value):
-                    record[key] = None
+                    row_dict[column] = None
+                else:
+                    row_dict[column] = value
+            data_to_save.append(row_dict)
 
+        # Lagre til JSON
         with open(file_path, 'w') as json_file:
             json.dump(data_to_save, json_file, indent=4)
         print(f"Renset data lagret i '{file_path}'")
+        
     except Exception as e:
-        print(f"Feil ved lagring av data: {e}")
+        print(f"Feil ved lagring av data: {str(e)}")
+        print("\nDetaljer om feilen:")
+        print("DataFrame kolonner:", df_to_save.columns.tolist())
+        print("DataFrame første rad:", df_to_save.iloc[0].to_dict() if not df_to_save.empty else "Tom DataFrame")
 
-# Hovedfunksjonen som kjører alle funksjonene
 def main_dc_nilu():
-    data = load_json(raw_json_file)
-    df_all = build_dataframe(data)
-    df_pivot, outliers_removed = clean_data(df_all, column_to_remove, 4, 100)
-    dataset_info = print_dataset_info(df_pivot, outliers_removed)  # Skriver ut og returnerer info
-    save_cleaned_data(df_pivot, cleaned_json_file)
-    print("\n=== Data rensing fullført ===\n")
+    """
+    Hovedfunksjonen som kjører alle funksjonene for datarensing.
+    """
+    data = load_json(raw_json_file)  # Laster inn rådata fra JSON-fil
+    df_all = build_dataframe(data)  # Bygger en DataFrame fra rådata
+    df_pivot, outliers_removed = clean_data(df_all, column_to_remove, 4, 100)  # Renser dataen
+    dataset_info = print_dataset_info(df_pivot, outliers_removed)  # Skriver ut informasjon om datasettet
+    save_cleaned_data(df_pivot, cleaned_json_file)  # Lagrer den rensede dataen
+    print("\nData rensing fullført")
 
+# Kjører hovedfunksjonen
 main_dc_nilu()

@@ -63,7 +63,7 @@ Vi har valgt å bruke `.gitignore` på store og genererte datafiler, spesielt i 
 
 ---
 
-### [**Tilbake til samlesiden**](../docs/samleside.md)
+### [**Til samlesiden**](../docs/samleside.md)
 
 
 

@@ -166,7 +166,7 @@ def plot_predictions(df_train, df_future, future_df, y_pred_extended):
     """
     plt.figure(figsize=(15, 6))
 
-    # Plot treningsdata
+    # Plot treningsdata (reell)
     mask_train_real = df_train['generated_mean_air_temperature'] == 0
     dates_real = df_train.loc[mask_train_real, 'referenceTime']
     temps_real = df_train.loc[mask_train_real, 'mean_air_temperature']
@@ -174,16 +174,32 @@ def plot_predictions(df_train, df_future, future_df, y_pred_extended):
     for seg_x, seg_y in zip(segments_x, segments_y):
         plt.plot(seg_x, seg_y, color='blue', alpha=0.7, label='Trenings data')
 
-    # Plot valideringsdata
+    # Plot treningsdata (generert)
+    mask_train_gen = df_train['generated_mean_air_temperature'] == 1
+    dates_gen = df_train.loc[mask_train_gen, 'referenceTime']
+    temps_gen = df_train.loc[mask_train_gen, 'mean_air_temperature']
+    segments_x, segments_y = split_into_segments(dates_gen, temps_gen)
+    for seg_x, seg_y in zip(segments_x, segments_y):
+        plt.plot(seg_x, seg_y, color='red', alpha=0.7, label='Imputert data')
+
+    # Plot valideringsdata (reell)
     mask_future_real = df_future['generated_mean_air_temperature'] == 0
     dates_future = df_future.loc[mask_future_real, 'referenceTime']
     temps_future = df_future.loc[mask_future_real, 'mean_air_temperature']
     segments_x, segments_y = split_into_segments(dates_future, temps_future)
     for seg_x, seg_y in zip(segments_x, segments_y):
-        plt.plot(seg_x, seg_y, color='green', alpha=0.7, label='Validerings data')
+        plt.plot(seg_x, seg_y, color='seagreen', alpha=0.7, label='Validerings data')
+
+    # Plot valideringsdata (generert)
+    mask_future_gen = df_future['generated_mean_air_temperature'] == 1
+    dates_future_gen = df_future.loc[mask_future_gen, 'referenceTime']
+    temps_future_gen = df_future.loc[mask_future_gen, 'mean_air_temperature']
+    segments_x, segments_y = split_into_segments(dates_future_gen, temps_future_gen)
+    for seg_x, seg_y in zip(segments_x, segments_y):
+        plt.plot(seg_x, seg_y, color='red', alpha=0.7)
 
     # Plot prediksjoner
-    plt.plot(future_df['referenceTime'], y_pred_extended, color='orange', linestyle='--', linewidth=2, label='Predikert data')
+    plt.plot(future_df['referenceTime'], y_pred_extended, color='darkblue', linestyle='--', linewidth=2, label='Predikert data')
 
     # Formater X-aksen for å vise hvert år
     ax = plt.gca()
@@ -193,7 +209,12 @@ def plot_predictions(df_train, df_future, future_df, y_pred_extended):
     plt.xlabel('År')
     plt.ylabel('Temperatur (°C)')
     plt.title('Prediksjon av gjennomsnittlig lufttemperatur i Trondheim')
-    plt.legend(loc='upper right')
+    
+    # Fix duplicate labels in legend
+    handles, labels = plt.gca().get_legend_handles_labels()
+    by_label = dict(zip(labels, handles))
+    plt.legend(by_label.values(), by_label.keys(), loc='upper right')
+    
     plt.grid(True, alpha=0.3)
     plt.xticks(rotation=45)
     plt.tight_layout()

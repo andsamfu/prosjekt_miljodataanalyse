@@ -3,6 +3,13 @@
 
 # Virtuelle miljøer
 venv/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
 
 # Datafiler (store og gjenopprettbare)
 data/raw/
@@ -11,3 +18,26 @@ data/clean/
 # Unntak for å beholde mappestrukturen i Git
 !data/raw/.gitkeep
 !data/clean/.gitkeep
+
+# IDE og editor filer
+.vscode/
+.idea/
+*.swp
+*.swo
+.vs/
+*.code-workspace
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+coverage.xml
+*.cover
+.pytest_cache/
+
+# Logs and databases
+*.log
+*.sqlite
+*.db

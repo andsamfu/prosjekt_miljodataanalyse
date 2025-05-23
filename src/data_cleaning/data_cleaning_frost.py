@@ -38,13 +38,11 @@ def clean_frost_data(json_file, db_file):
         'mean(air_temperature P1D)': 'mean_air_temperature',
         'sum(precipitation_amount P1D)': 'total_precipitation',
         'mean(wind_speed P1D)': 'mean_wind_speed'
-    }, inplace=True)
-
-    # Define valid ranges for FROST weather data
+    }, inplace=True)    # Define valid ranges for FROST weather data based on Trondheim climate
     frost_valid_ranges = {
-        'mean_air_temperature': (-50, 50),
-        'total_precipitation': (0, 500),
-        'mean_wind_speed': (0, 100)
+        'mean_air_temperature': (-30, 40),
+        'total_precipitation': (0, 250),
+        'mean_wind_speed': (0, 60)
     }
 
     # Initialize validators

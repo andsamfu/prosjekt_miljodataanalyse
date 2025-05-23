@@ -1,10 +1,10 @@
 {
     "metadata": {
-        "description": "Mock weather data cases for testing organized by validation type",
+        "description": "Mock weather data cases for testing organized by validation type for Trondheim",
         "valid_ranges": {
-            "mean(air_temperature P1D)": [-50.0, 50.0],
-            "sum(precipitation_amount P1D)": [0.0, 500.0],
-            "mean(wind_speed P1D)": [0.0, 100.0]
+            "mean(air_temperature P1D)": [-30.0, 40.0],
+            "sum(precipitation_amount P1D)": [0.0, 250.0],
+            "mean(wind_speed P1D)": [0.0, 60.0]
         }
     },
 
@@ -173,10 +173,9 @@
                     "2000-01-01T00:00:00.000Z",
                     "2000-01-02T00:00:00.000Z",
                     "2000-01-03T00:00:00.000Z"
-                ],
-                "mean(air_temperature P1D)": [999.9, -999.9, 1.5],
-                "sum(precipitation_amount P1D)": [9999.9, 0.4, -1.0],
-                "mean(wind_speed P1D)": [200.0, 2.8, 0.0]
+                ],                "mean(air_temperature P1D)": [50.0, -40.0, 1.5],
+                "sum(precipitation_amount P1D)": [300.0, 0.4, -1.0],
+                "mean(wind_speed P1D)": [80.0, 2.8, 0.0]
             },
             "expected_missing": 0,
             "expected_outliers": {
@@ -185,8 +184,7 @@
                 "mean(wind_speed P1D)": [0]
             },
             "description": "Representative test for out-of-range values"
-        },
-        "outlier_test_setup": {
+        },        "outlier_test_setup": {
             "data": {
                 "referenceTime": [
                     "2020-01-01T00:00:00.000Z",
@@ -198,9 +196,9 @@
                 "mean(wind_speed P1D)": [2.4, 3.2, 2.8]
             },
             "valid_ranges": {
-                "mean(air_temperature P1D)": [-50.0, 50.0],
-                "sum(precipitation_amount P1D)": [0.0, 500.0],
-                "mean(wind_speed P1D)": [0.0, 100.0]
+                "mean(air_temperature P1D)": [-30.0, 40.0],
+                "sum(precipitation_amount P1D)": [0.0, 250.0],
+                "mean(wind_speed P1D)": [0.0, 60.0]
             },
             "description": "Test data for outlier validator setup"
         }
@@ -246,8 +244,7 @@
     },
 
     "// === Imputation Tests ===": null,
-    "imputation_tests": {
-        "imputation_test_data": {
+    "imputation_tests": {        "imputation_test_data": {
             "data": {
                 "referenceTime": [
                     "2020-01-01T00:00:00.000Z",
@@ -255,15 +252,14 @@
                     "2020-01-04T00:00:00.000Z",
                     "2020-01-05T00:00:00.000Z",
                     "2020-01-06T00:00:00.000Z"
-                ],
-                "mean(air_temperature P1D)": [1.0, null, -60.0, 5.0, 2.0],
-                "sum(precipitation_amount P1D)": [0.5, 600.0, 0.4, null, 0.2],
-                "mean(wind_speed P1D)": [2.0, 3.0, null, 150.0, 2.5]
+                ],                "mean(air_temperature P1D)": [1.0, null, -35.0, 5.0, 2.0],
+                "sum(precipitation_amount P1D)": [0.5, 300.0, 0.4, null, 0.2],
+                "mean(wind_speed P1D)": [2.0, 3.0, null, 70.0, 2.5]
             },
             "valid_ranges": {
-                "mean(air_temperature P1D)": [-50.0, 50.0],
-                "sum(precipitation_amount P1D)": [0.0, 500.0],
-                "mean(wind_speed P1D)": [0.0, 100.0]
+                "mean(air_temperature P1D)": [-30.0, 40.0],
+                "sum(precipitation_amount P1D)": [0.0, 250.0],
+                "mean(wind_speed P1D)": [0.0, 60.0]
             },
             "description": "Test data for imputation validation chain with missing values, outliers, and date gaps"
         }

@@ -21,7 +21,7 @@ def vis_pm10_per_måned(json_path):
 
     # 5. Lag boxplot for PM10 månedsvis
     plt.figure(figsize=(12, 6)) # Justert figurstørrelse for bedre lesbarhet med flere måneder
-    sns.boxplot(data=df, x='month', y='PM10', palette='Blues', fliersize=0) 
+    sns.boxplot(data=df, x='month', y='PM10', palette='Blues', fliersize=3) 
     plt.title("Boxplot av månedlige PM10-nivå (μg/m³)")
     plt.xlabel("Måned")
     plt.ylabel("PM10-nivå (μg/m³)")

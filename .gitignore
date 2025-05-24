@@ -14,6 +14,7 @@ __pycache__/
 # Datafiler (store og gjenopprettbare)
 data/raw/
 data/clean/
+data/analyses_results/
 
 # Unntak for å beholde mappestrukturen i Git
 !data/raw/.gitkeep
@@ -27,7 +28,7 @@ data/clean/
 .vs/
 *.code-workspace
 
-# Unit test / coverage reports
+# Unit test og dekning
 htmlcov/
 .tox/
 .coverage
@@ -37,7 +38,7 @@ coverage.xml
 *.cover
 .pytest_cache/
 
-# Logs and databases
+# Loggfiler og databasefiler
 *.log
 *.sqlite
 *.db

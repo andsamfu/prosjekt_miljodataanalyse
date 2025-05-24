@@ -2,7 +2,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-def vis_korrelasjoner_sammen(frost_csv, nilu_csv):
+def show_correlation_together(frost_csv, nilu_csv):
     """
     Visualiserer korrelasjonsmatriser for FROST- og NILU-data ved hjelp av heatmaps.
 

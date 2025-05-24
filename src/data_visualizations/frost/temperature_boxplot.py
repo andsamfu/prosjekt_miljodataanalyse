@@ -3,7 +3,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import sqlite3
 
-def vis_temp_per_måned(db_path):
+def show_temp(db_path):
     """
     Visualiserer daglig middeltemperatur per måned ved hjelp av et boxplot.
 

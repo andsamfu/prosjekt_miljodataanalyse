@@ -2,7 +2,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-def vis_luftkvalitet_regresjon_nilu(json_path):
+def show_regretion(json_path):
     """
     Visualiserer daglig utvikling i luftforurensningsnivåer (NO2, PM10, PM2.5) 
     ved hjelp av regresjonsplot.

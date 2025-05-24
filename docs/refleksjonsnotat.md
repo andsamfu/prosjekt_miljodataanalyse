@@ -49,3 +49,5 @@ Vi har mange idéer til videreutvikling, blant annet:
 Vi har lært mye om både datavitenskap og miljøspørsmål. Viktigheten av planlegging, struktur, dokumentasjon og ryddig kode er noe vi tar med oss videre. Dette prosjektet har gjort oss bedre rustet til større prosjekter, både i studier og arbeidsliv – og ikke minst har motivasjonen for videre arbeid med data økt. Vi ser tydelig hvordan dette kan brukes i samfunnsnyttige sammenhenger, fra miljøforvaltning til helseteknologi.
 
 > *(Refleksjonsnotatet kunne vært mer utdypende, men vi hadde maks 800 ord å forholde oss til.)*
+
+### [**Til samlesiden**](../docs/samleside.md)

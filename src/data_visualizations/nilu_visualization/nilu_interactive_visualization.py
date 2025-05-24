@@ -11,16 +11,16 @@ def plot_seasonal_air_quality(json_path: str):
     - json_path (str): Filsti til renset NILU-JSON (f.eks. 'data/clean/cleaned_data_nilu.json')
     """
 
-    # 1. Last inn JSON manuelt
+    # Last inn JSON manuelt
     with open(json_path, "r") as f:
         data = json.load(f)
 
-    # 2. Lag DataFrame
+    # Lag DataFrame
     df = pd.DataFrame(data)
     df['dateTime'] = pd.to_datetime(df['dateTime'])
     df['year'] = df['dateTime'].dt.year
 
-    # 3. Legg til sesong
+    # Legg til sesong
     def get_season(month):
         if month in [12, 1, 2]:
             return "Vinter"
@@ -33,13 +33,13 @@ def plot_seasonal_air_quality(json_path: str):
 
     df['season'] = df['dateTime'].dt.month.apply(get_season)
 
-    # 4. Kolonner å analysere (forutsetter at data er ferdigrenset)
+    # Kolonner å analysere (forutsetter at data er ferdigrenset)
     columns_to_analyze = ['NO2', 'PM10', 'PM2.5']
 
-    # 5. Aggregering
+    # Aggregering
     seasonal_avg = df.groupby(['year', 'season'])[columns_to_analyze].mean(numeric_only=True).reset_index()
 
-    # 6. Melt til long-format
+    # Melt til long-format
     df_long = seasonal_avg.melt(
         id_vars=['year', 'season'],
         value_vars=columns_to_analyze,
@@ -47,7 +47,7 @@ def plot_seasonal_air_quality(json_path: str):
         value_name='Average'
     )
 
-    # 7. Lag interaktiv graf
+    # Lag interaktiv graf
     fig = px.line(
         df_long,
         x='year',
@@ -65,7 +65,7 @@ def plot_seasonal_air_quality(json_path: str):
 
     fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
 
-    # 8. Tilpass x-aksene
+    # Tilpass x-aksene
     years = sorted(df_long['year'].unique())[::2]
     for axis in fig.layout:
         if axis.startswith('xaxis'):
@@ -76,7 +76,7 @@ def plot_seasonal_air_quality(json_path: str):
                 tickfont=dict(size=9)
             )
 
-    # 9. Layout-tilpasninger
+    # Layout-tilpasninger
     fig.update_layout(
         plot_bgcolor='#e0e0e0',
         paper_bgcolor='#e0e0e0',
@@ -94,5 +94,5 @@ def plot_seasonal_air_quality(json_path: str):
         title_x=0.5
     )
 
-    # 10. Vis graf
+    # Vis graf
     fig.show()

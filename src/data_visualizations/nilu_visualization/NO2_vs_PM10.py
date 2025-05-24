@@ -3,7 +3,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import json
 
-def vis_pm10_vs_no2_per_sesong(json_path):
+def show_pm10_vs_no2(json_path):
     """
     Visualiserer sammenhengen mellom PM10 og NO2 per sesong ved hjelp av regresjonsplot.
 

@@ -3,7 +3,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import json
 
-def vis_pm10_per_måned(json_path):
+def show_pm10(json_path):
     """
     Visualiserer månedlige PM10-nivåer ved hjelp av et boxplot.
 

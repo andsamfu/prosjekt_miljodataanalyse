@@ -3,7 +3,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import json
 
-def vis_no2_per_måned(json_path):
+def show_no2(json_path):
     """
     Visualiserer månedlige NO2-nivåer ved hjelp av et boxplot.
 

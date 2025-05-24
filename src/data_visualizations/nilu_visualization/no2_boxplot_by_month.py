@@ -21,9 +21,9 @@ def vis_no2_per_måned(json_path):
 
     # Lage boxplot
     plt.figure(figsize=(12, 6))
-    sns.boxplot(data=df, x='month', y='NO2', palette='Blues', fliersize=0)
-    plt.title("Boxplot av månedlige NO₂-nivå (μg/m³)")
+    sns.boxplot(data=df, x='month', y='NO2', palette='Blues', fliersize=3)
+    plt.title("Boxplot av månedlige NO2-nivå (μg/m³)")
     plt.xlabel("Måned")
-    plt.ylabel("NO₂ (μg/m³)")
+    plt.ylabel("NO2 (μg/m³)")
     plt.tight_layout()
     plt.show()

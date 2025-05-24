@@ -3,93 +3,105 @@ import pandas as pd
 import plotly.graph_objects as go
 
 def plot_weather_data(db_path="data/clean/frost.db"):
-    # Koble til database og hent data
+    """
+    Visualiserer værdata fra en SQLite-database ved hjelp av Plotly.
+
+    Args:
+        db_path (str): Filsti til SQLite-databasen som inneholder værdata.
+
+    Returns:
+        plotly.graph_objects.Figure: En interaktiv figur med værdata.
+    """
+    # Koble til databasen og hent data
     conn = sqlite3.connect(db_path)
     df = pd.read_sql_query("""
         SELECT referenceTime, mean_air_temperature, total_precipitation, mean_wind_speed
         FROM weather_data
         WHERE referenceTime IS NOT NULL
     """, conn)
-    conn.close()
+    conn.close()  # Lukk tilkoblingen til databasen
 
-    # Konverter tid til datetime-format
+    # Konverter 'referenceTime' til datetime-format
     df['referenceTime'] = pd.to_datetime(df['referenceTime'])
 
-    # Initialiser figur
+    # Initialiser figuren
     fig = go.Figure()
 
-    # Temperatur - rød, myk linje
+    # Legg til temperaturdata som en rød linje
     fig.add_trace(go.Scatter(
         x=df['referenceTime'],
         y=df['mean_air_temperature'],
         mode='lines',
-        name='Temperatur (°C)',
-        line=dict(color='#E74C3C', shape='spline', smoothing=1.3),
-        visible=True
+        name='Temperatur (°C)', 
+        line=dict(color='#E74C3C', shape='spline', smoothing=1.3), 
+        visible=True  # Gjør denne linjen synlig som standard
     ))
 
-    # Nedbør - blå, myk linje
+    # Legg til nedbørsdata som en blå linje
     fig.add_trace(go.Scatter(
         x=df['referenceTime'],
         y=df['total_precipitation'],
         mode='lines',
-        name='Nedbør (mm)',
-        line=dict(color='#3498DB', shape='spline', smoothing=1.3),
-        visible=False
+        name='Nedbør (mm)',  
+        line=dict(color='#3498DB', shape='spline', smoothing=1.3),  
+        visible=False  # Skjul denne linjen som standard
     ))
 
-    # Vindhastighet - grønn, myk linje
+    # Legg til vindhastighetsdata som en grønn linje
     fig.add_trace(go.Scatter(
         x=df['referenceTime'],
         y=df['mean_wind_speed'],
         mode='lines',
-        name='Vindhastighet (m/s)',
-        line=dict(color='#27AE60', shape='spline', smoothing=1.3),
-        visible=False
+        name='Vindhastighet (m/s)', 
+        line=dict(color='#27AE60', shape='spline', smoothing=1.3),  
+        visible=False  # Skjul denne linjen som standard
     ))
 
-    # Layout og interaktivitet
+    # Oppdater layout og legg til interaktivitet
     fig.update_layout(
-        title='Værdata i Trondheim',
+        title='Værdata i Trondheim',  
         xaxis=dict(
-            title='Tid',
-            rangeselector=dict(
+            title='Tid', 
+            rangeselector=dict(  # Legg til knapper for å velge tidsintervall
                 buttons=[
                     dict(count=1, label="1 måned", step="month", stepmode="backward"),
                     dict(count=6, label="6 måneder", step="month", stepmode="backward"),
                     dict(count=1, label="1 år", step="year", stepmode="backward"),
-                    dict(step="all", label="Alle")
+                    dict(step="all", label="Alle") 
                 ]
             ),
-            rangeslider=dict(visible=True),
-            type="date"
+            rangeslider=dict(visible=True),  # Legg til en glider for tidsutvalg
+            type="date"  # Angi at x-aksen viser datoer
         ),
-        yaxis=dict(title='Temperatur (°C)'),
-        legend=dict(title="Målinger", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        updatemenus=[dict(
+        yaxis=dict(title='Temperatur (°C)'), 
+        legend=dict(
+            title="Målinger", 
+            orientation="h",  
+            yanchor="bottom", y=1.02,  
+            xanchor="right", x=1  
+        ),
+        updatemenus=[dict(  # Legg til knapper for å bytte mellom datasett
             type="buttons",
-            direction="right",
-            showactive=True,
-            x=1,
-            xanchor="right",
-            y=1.02,
-            yanchor="bottom",
-            pad={"r": 10, "t": 10},
+            direction="right",  # Knappene vises horisontalt
+            showactive=True,  # Marker aktiv knapp
+            x=1, xanchor="right",  # Plassering til høyre
+            y=1.02, yanchor="bottom",  # Plassering over figuren
+            pad={"r": 10, "t": 10},  # Justering av avstand
             buttons=list([
                 dict(label="Temperatur",
                      method="update",
-                     args=[{"visible": [True, False, False]},
+                     args=[{"visible": [True, False, False]},  # Vis kun temperatur
                            {"yaxis.title.text": "Temperatur (°C)"}]),
                 dict(label="Nedbør",
                      method="update",
-                     args=[{"visible": [False, True, False]},
+                     args=[{"visible": [False, True, False]},  # Vis kun nedbør
                            {"yaxis.title.text": "Nedbør (mm)"}]),
                 dict(label="Vindhastighet",
                      method="update",
-                     args=[{"visible": [False, False, True]},
+                     args=[{"visible": [False, False, True]},  # Vis kun vindhastighet
                            {"yaxis.title.text": "Vindhastighet (m/s)"}]),
             ])
         )]
     )
-
-    return fig
+    # Returnerer figuren
+    return fig  

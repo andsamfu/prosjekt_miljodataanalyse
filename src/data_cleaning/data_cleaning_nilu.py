@@ -83,15 +83,15 @@ def clean_data(df_all, column_to_remove, num_std, n_neighbors):
     if column_to_remove in df_pivot.columns:
         df_pivot.drop(columns=[column_to_remove], inplace=True)
 
+    # Fyller inn manglende datoer ved hjelp av DateContinuityValidator
+    date_validator = DateContinuityValidator()
+    missing_dates, df_pivot = date_validator.validate(df_pivot, date_column='referenceTime')
+
     # Fjerner outliers ved hjelp av OutlierValidator
     valid_ranges = {col: (df_pivot[col].mean() - num_std * df_pivot[col].std(),
                           df_pivot[col].mean() + num_std * df_pivot[col].std()) for col in df_pivot.columns if col not in ['dateTime', 'referenceTime']}
     outlier_validator = OutlierValidator(valid_ranges)
     outliers_removed, df_pivot = outlier_validator.validate(df_pivot)
-
-    # Fyller inn manglende datoer ved hjelp av DateContinuityValidator
-    date_validator = DateContinuityValidator()
-    missing_dates, df_pivot = date_validator.validate(df_pivot, date_column='referenceTime')
 
     # Fyller inn manglende verdier ved hjelp av ImputationValidator
     imputation_validator = ImputationValidator(n_neighbors=n_neighbors)
@@ -111,20 +111,25 @@ def print_dataset_info(df_pivot, outliers_removed):
         dict: Informasjon om datasettet.
     """
     generated_counts = {col: int(df_pivot[col].sum()) for col in df_pivot.columns if col.startswith('generated_')}
+    
+    # Teller antall outliers som er fjernet for hver kolonne
+    outliers_count = {col: len(counts) for col, counts in outliers_removed.items()}
+    
     info = {
         "Antall rader": len(df_pivot),
         "Genererte verdier per kolonne": generated_counts,
-        "Outliers fjernet per kolonne": outliers_removed
+        "Outliers fjernet per kolonne": outliers_count
     }
 
     print("Dataset informasjon:\n")
     print(f"Antall rader i datasettet: {info['Antall rader']}")
-    print("\nGenererte verdier per kolonne:")
-    for col, count in info["Genererte verdier per kolonne"].items():
-        print(f"  - {col}: {count} genererte verdier")
-    print("\nAntall outliers fjernet per kolonne:")
+    print("\nAntall outliers fjernet per verdi:")
     for col, count in info["Outliers fjernet per kolonne"].items():
         print(f"  - {col}: {count} outliers fjernet")
+    print("\nGenererte verdier:")
+    for col, count in info["Genererte verdier per kolonne"].items():
+        print(f"  - {col}: {count} genererte verdier")
+   
 
     return info
 
@@ -194,6 +199,7 @@ def main_dc_nilu():
     Hovedfunksjonen som kjører alle funksjonene for datarensing.
     """
     data = load_json(raw_json_file)  # Laster inn rådata fra JSON-fil
+    
     df_all = build_dataframe(data)  # Bygger en DataFrame fra rådata
     df_pivot, outliers_removed = clean_data(df_all, column_to_remove, 4, 100)  # Renser dataen
     dataset_info = print_dataset_info(df_pivot, outliers_removed)  # Skriver ut informasjon om datasettet

@@ -100,3 +100,6 @@ Testene validerer at alle dataverdier ligger innenfor fysisk realistiske område
 ### Vindstyrke
 - Gyldig område: 0 m/s til 60 m/s
 - Må alltid være ikke-negativ
+
+
+### [**Til samlesiden**](../docs/samleside.md)

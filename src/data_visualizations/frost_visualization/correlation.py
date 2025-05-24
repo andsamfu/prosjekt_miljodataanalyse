@@ -2,7 +2,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-def vis_frost_korrelasjon(csv_filsti):
+def show_frost_correlation(csv_filsti):
     """
     Visualiserer korrelasjonsmatrisen for værdata ved hjelp av et heatmap.
 

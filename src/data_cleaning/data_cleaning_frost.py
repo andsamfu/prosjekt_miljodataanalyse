@@ -4,7 +4,13 @@ import json
 import os
 import numpy as np
 import sqlite3
-from data_validators import MissingValueValidator, OutlierValidator, DateContinuityValidator, ImputationValidator
+
+if __name__ == "__main__":
+    # When running directly
+    from data_validators import *
+else:
+    # When imported as module
+    from .data_validators import *
 
 def clean_frost_data(json_file, db_file):
     # Load the JSON data
@@ -78,9 +84,12 @@ def clean_frost_data(json_file, db_file):
 
     print(f"\nCleaned data saved to '{db_file}' in the table 'weather_data'.")
 
-# Example usage
-json_file = os.path.join('data', 'raw', 'api_frost_weather.json')
-db_file = os.path.join('data', 'clean', 'frost.db')
+def default_clean_frost_data(project_root):
+    # Set up paths relative to the script location
+    json_file = os.path.join(project_root, 'data', 'raw', 'api_frost_weather.json')
+    db_file = os.path.join(project_root, 'data', 'clean', 'frost.db')
+    clean_frost_data(json_file, db_file)
 
-clean_frost_data(json_file, db_file)
-
+# Run the script directly
+if __name__ == "__main__":
+    default_clean_frost_data('')

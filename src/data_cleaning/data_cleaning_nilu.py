@@ -4,7 +4,13 @@ import pandas as pd
 import json
 import numpy as np
 from sklearn.impute import KNNImputer
-from data_validators import OutlierValidator, ImputationValidator, DateContinuityValidator
+
+if __name__ == "__main__":
+    # When running directly
+    from data_validators import *
+else:
+    # When imported as module
+    from .data_validators import *
 
 # Filsti til JSON-filene
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -201,4 +207,5 @@ def main_dc_nilu():
     print("\nData rensing fullført")
 
 # Kjører hovedfunksjonen
-main_dc_nilu()
+if __name__ == "__main__":
+    main_dc_nilu()

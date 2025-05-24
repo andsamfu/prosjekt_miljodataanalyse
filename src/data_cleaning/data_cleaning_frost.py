@@ -6,90 +6,102 @@ import numpy as np
 import sqlite3
 
 if __name__ == "__main__":
-    # When running directly
+    # Når skriptet kjøres direkte
     from data_validators import *
 else:
-    # When imported as module
+    # Når skriptet importeres som modul
     from .data_validators import *
 
 def clean_frost_data(json_file, db_file):
-    # Load the JSON data
+    """
+    Renser og validerer værdata fra FROST API, og lagrer resultatet i en SQLite-database.
+
+    Args:
+        json_file (str): Filsti til JSON-filen med rådata fra FROST API.
+        db_file (str): Filsti til SQLite-databasen der rensede data skal lagres.
+    """
+    # Last inn JSON-data
     with open(json_file, 'r') as file:
         raw_data = json.load(file)
 
-    # Process the data
+    # Prosesser dataene og konverter til pandas DataFrame
     dataframes = []
     for entry in raw_data:
         if 'observations' in entry and entry['observations']:
             df = pd.DataFrame(entry['observations'])
-            df['referenceTime'] = entry['referenceTime']
-            df['sourceId'] = entry['sourceId']
+            df['referenceTime'] = entry['referenceTime']  # Legg til referansetid
+            df['sourceId'] = entry['sourceId']  # Legg til kilde-ID
             dataframes.append(df)
 
     if not dataframes:
-        print("No valid data found in the JSON file.")
+        print("Ingen gyldige data funnet i JSON-filen.")
         return
 
-    # Combine all dataframes
+    # Kombiner alle dataframes til én
     df = pd.concat(dataframes, ignore_index=True)
 
-    # Filter and reshape the data
+    # Filtrer og omform dataene
     df = df[df['elementId'].isin(['mean(air_temperature P1D)', 'sum(precipitation_amount P1D)', 'mean(wind_speed P1D)'])]
-    # Strip time component when initially loading the data
-    df['referenceTime'] = pd.to_datetime(df['referenceTime']).dt.strftime('%Y-%m-%d')
+    df['referenceTime'] = pd.to_datetime(df['referenceTime']).dt.strftime('%Y-%m-%d')  # Fjern tidskomponent
     df_pivot = df.pivot_table(index='referenceTime', columns='elementId', values='value', aggfunc='first').reset_index()
 
-    # Rename columns for clarity
+    # Gi kolonnene mer beskrivende navn
     df_pivot.rename(columns={
         'mean(air_temperature P1D)': 'mean_air_temperature',
         'sum(precipitation_amount P1D)': 'total_precipitation',
         'mean(wind_speed P1D)': 'mean_wind_speed'
-    }, inplace=True)    # Define valid ranges for FROST weather data based on Trondheim climate
+    }, inplace=True)
+
+    # Definer gyldige verdier for værdata basert på klima i Trondheim
     frost_valid_ranges = {
-        'mean_air_temperature': (-30, 40),
-        'total_precipitation': (0, 250),
-        'mean_wind_speed': (0, 60)
+        'mean_air_temperature': (-30, 40),  # Temperatur i Celsius
+        'total_precipitation': (0, 250),   # Nedbør i mm
+        'mean_wind_speed': (0, 60)         # Vindhastighet i m/s
     }
 
-    # Initialize validators
-    missing_validator = MissingValueValidator()
-    outlier_validator = OutlierValidator(frost_valid_ranges)
-    continuity_validator = DateContinuityValidator()
-    imputation_validator = ImputationValidator(n_neighbors=5)
-    
-    # 1. Check for missing values
+    # Initialiser validatorer
+    missing_validator = MissingValueValidator()  # Validator for manglende verdier
+    outlier_validator = OutlierValidator(frost_valid_ranges)  # Validator for uteliggere
+    continuity_validator = DateContinuityValidator()  # Validator for datokontinuitet
+    imputation_validator = ImputationValidator(n_neighbors=5)  # Validator for imputasjon
+
+    # 1. Sjekk for manglende verdier
     missing_results, df_cleaned = missing_validator.validate(df_pivot)
     missing_validator.report(missing_results)
-    
-    # 2. Check and handle outliers
+
+    # 2. Sjekk og håndter uteliggere
     outlier_results, df_cleaned = outlier_validator.validate(df_cleaned)
     outlier_validator.report(outlier_results)
-    
-    # 3. Check and handle date continuity
+
+    # 3. Sjekk og håndter datokontinuitet
     gap_results, df_cleaned = continuity_validator.validate(df_cleaned)
     continuity_validator.report(gap_results)
-    
-    # 4. Impute missing values
+
+    # 4. Imputer manglende verdier
     imputation_results, df_cleaned = imputation_validator.validate(df_cleaned)
     imputation_validator.report(imputation_results)
-    
-    # Save the cleaned data including generated_ columns
+
+    # Lagre de rensede dataene i en SQLite-database
     os.makedirs(os.path.dirname(db_file), exist_ok=True)
     conn = sqlite3.connect(db_file)
-    
-    # Convert date format when saving
-    df_cleaned['referenceTime'] = pd.to_datetime(df_cleaned['referenceTime']).dt.strftime('%Y-%m-%d')
+    df_cleaned['referenceTime'] = pd.to_datetime(df_cleaned['referenceTime']).dt.strftime('%Y-%m-%d')  # Konverter datoformat
     df_cleaned.to_sql('weather_data', conn, if_exists='replace', index=False)
     conn.close()
 
-    print(f"\nCleaned data saved to '{db_file}' in the table 'weather_data'.")
+    print(f"\nRensede data lagret i '{db_file}' i tabellen 'weather_data'.")
 
 def default_clean_frost_data(project_root):
-    # Set up paths relative to the script location
+    """
+    Standardfunksjon for å rense FROST-data med forhåndsdefinerte filstier.
+
+    Args:
+        project_root (str): Rotmappe for prosjektet.
+    """
+    # Sett opp filstier relativt til prosjektets rotmappe
     json_file = os.path.join(project_root, 'data', 'raw', 'api_frost_weather.json')
     db_file = os.path.join(project_root, 'data', 'clean', 'frost.db')
     clean_frost_data(json_file, db_file)
 
-# Run the script directly
+# Kjør skriptet direkte
 if __name__ == "__main__":
     default_clean_frost_data('')

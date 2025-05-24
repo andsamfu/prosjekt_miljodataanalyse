@@ -26,6 +26,7 @@ Dette er en samleside som gir en samlet oversikt over alle hoveddeler av prosjek
 | [README – notebooks/](../notebooks/README.md) | Forklarer innhold og struktur i notebook-mappen |
 | [README – src/](../src/README.md) | Forklarer oppbygging og ansvar for modulene i kildekoden |
 | [README – data/](../data/README.md) | Beskriver hvordan datasett lagres og håndteres |
+| [README – test/](../test/README.md) | Oversikt over enhetstester som sikrer kvalitet i koden |
 | [Mer om KNN imputasjon](../notebooks/KNN_imputation.ipynb) | Tester og sammenligner ulike metoder for imputasjon |
 
 ---
@@ -36,6 +37,9 @@ Dette er en samleside som gir en samlet oversikt over alle hoveddeler av prosjek
 |----------|-------------|
 | [Refleksjonsnotat](refleksjonsnotat.md) | Refleksjon rundt læring, samarbeid og tekniske valg i prosjektet. |
 | [Bruken av Git i prosjektet](git_bruk.md) | Vår refleksjon rundt bruk av Git, issues og branching |
+
+
+
 
 
 

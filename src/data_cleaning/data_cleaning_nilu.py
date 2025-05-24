@@ -153,7 +153,7 @@ def save_cleaned_data(df_pivot, file_path):
             print("Advarsel: DataFrame er tom. Ingen data å lagre.")
             return
 
-        # Lag en kopi av dataframe for å unngå modifikasjoner på original
+        # Lag en kopi av dataframe for å unngå endringer på original
         df_to_save = df_pivot.copy()
         
         # Sørg for at dateTime er i riktig format og er unik

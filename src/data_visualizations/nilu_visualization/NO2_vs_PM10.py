@@ -4,15 +4,22 @@ import matplotlib.pyplot as plt
 import json
 
 def vis_pm10_vs_no2_per_sesong(json_path):
-    # Leser inn NILU-data
+    """
+    Visualiserer sammenhengen mellom PM10 og NO2 per sesong ved hjelp av regresjonsplot.
+
+    Args:
+        json_path (str): Filsti til JSON-filen som inneholder NILU-data.
+    """
+    # Leser inn NILU-data fra JSON-fil
     with open(json_path, "r") as f:
         data = json.load(f)
 
+    # Konverterer data til en DataFrame og legger til dato
     nilu = pd.DataFrame(data)
     nilu['dateTime'] = pd.to_datetime(nilu['dateTime'])
     nilu['date'] = nilu['dateTime'].dt.date
 
-    # Legger til sesong
+    # Legger til sesong basert på måned
     def get_season(month):
         if month in [12, 1, 2]: return 'Winter'
         if month in [3, 4, 5]: return 'Spring'
@@ -21,10 +28,10 @@ def vis_pm10_vs_no2_per_sesong(json_path):
 
     nilu['season'] = nilu['dateTime'].dt.month.apply(get_season)
 
-    # Filtrer nødvendige kolonner og dropp manglende verdier
+    # Filtrer nødvendige kolonner og fjern rader med manglende verdier
     df = nilu[['date', 'PM10', 'NO2', 'season']].dropna()
 
-    # Farger og forklaringstekster
+    # Definer farger og forklaringer for hver sesong
     season_colors = {
         "Winter": "steelblue",
         "Spring": "mediumseagreen",
@@ -39,7 +46,7 @@ def vis_pm10_vs_no2_per_sesong(json_path):
         "Fall":   "Sterk korrelasjon: PM10 og NO2 beveger seg likt"
     }
 
-    # Plot
+    # Opprett figur med 2x2 delplott
     sns.set(style="whitegrid")
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
     fig.suptitle("Daglig regresjon per sesong: Sammenheng mellom PM10 og NO2", fontsize=16, y=1.03)
@@ -48,33 +55,41 @@ def vis_pm10_vs_no2_per_sesong(json_path):
     axes = axes.flatten()
 
     for i, season in enumerate(seasons):
+        # Filtrer data for gjeldende sesong
         data = df[df['season'] == season]
 
+        # Opprett regresjonsplot
         sns.regplot(
             data=data,
             x='PM10',
             y='NO2',
             ax=axes[i],
-            scatter_kws={"s": 12, "alpha": 0.3, "color": season_colors[season]},
-            line_kws={"color": "crimson", "lw": 2},
-            ci=95,
+            scatter_kws={"s": 12, "alpha": 0.3, "color": season_colors[season]},  # Stil for datapunkter
+            line_kws={"color": "crimson", "lw": 2},  # Stil for regresjonslinjen
+            ci=95,  # Konfidensintervall
             color="crimson"
         )
 
+        # Legg til tittel, akseetiketter og forklaring for sesongen
         axes[i].set_title(season, fontsize=14)
         axes[i].set_xlabel("PM10 (µg/m³)")
         axes[i].set_ylabel("NO2 (µg/m³)")
         axes[i].grid(True)
 
-        axes[i].text(0.05, 0.9, explanations[season],
-                     transform=axes[i].transAxes,
-                     fontsize=10, color="black",
-                     bbox=dict(facecolor="lightgrey", edgecolor="none", boxstyle="round,pad=0.4"))
+        axes[i].text(
+            0.05, 0.9, explanations[season],
+            transform=axes[i].transAxes,
+            fontsize=10, color="black",
+            bbox=dict(facecolor="lightgrey", edgecolor="none", boxstyle="round,pad=0.4")
+        )
 
-    # Undertittel
-    plt.figtext(0.5, 0.965,
-                "Daglig regresjon per sesong: Sammenheng mellom PM10 og NO2",
-                ha="center", fontsize=12, fontweight='bold')
-
+    # Juster layout og legg til undertittel
+    plt.figtext(
+        0.5, 0.965,
+        "Daglig regresjon per sesong: Sammenheng mellom PM10 og NO2",
+        ha="center", fontsize=12, fontweight='bold'
+    )
     plt.tight_layout(rect=[0, 0, 1, 0.94])
+
+    # Vis figuren
     plt.show()

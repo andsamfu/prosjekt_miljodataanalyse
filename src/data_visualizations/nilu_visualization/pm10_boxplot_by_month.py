@@ -4,26 +4,32 @@ import matplotlib.pyplot as plt
 import json
 
 def vis_pm10_per_måned(json_path):
-    # 1. Last inn renset NILU-data
+    """
+    Visualiserer månedlige PM10-nivåer ved hjelp av et boxplot.
+
+    Args:
+        json_path (str): Filsti til JSON-filen som inneholder NILU-data.
+    """
+    # Laster inn renset NILU-data fra JSON-fil
     with open(json_path, "r") as f:
         data = json.load(f)
 
-    # 2. Bygg DataFrame
+    # Konverterer data til en DataFrame
     df = pd.DataFrame(data)
-    df['dateTime'] = pd.to_datetime(df['dateTime'])
+    df['dateTime'] = pd.to_datetime(df['dateTime'])  # Konverterer 'dateTime' til datetime-format
 
-    # 3. Legg til månedskolonne og månednummer for sortering
-    df['month'] = df['dateTime'].dt.strftime('%b') # Månedens forkortede navn (Jan, Feb, etc.)
-    df['month_num'] = df['dateTime'].dt.month     # Månedens nummer (1, 2, etc.)
+    # Legger til kolonner for månednavn og månednummer
+    df['month'] = df['dateTime'].dt.strftime('%b')  # Månednavn (kort format, f.eks. Jan)
+    df['month_num'] = df['dateTime'].dt.month  # Måned som tall
 
-    # 4. Sortér for riktig månedrekkefølge på x-aksen
+    # Sorterer DataFrame for riktig månedrekkefølge
     df = df.sort_values('month_num')
 
-    # 5. Lag boxplot for PM10 månedsvis
-    plt.figure(figsize=(12, 6)) # Justert figurstørrelse for bedre lesbarhet med flere måneder
-    sns.boxplot(data=df, x='month', y='PM10', palette='Blues', fliersize=3) 
-    plt.title("Boxplot av månedlige PM10-nivå (μg/m³)")
-    plt.xlabel("Måned")
-    plt.ylabel("PM10-nivå (μg/m³)")
-    plt.tight_layout()
-    plt.show()
+    # Oppretter boxplot for å vise fordelingen av PM10-nivåer per måned
+    plt.figure(figsize=(12, 6))  # Setter figurstørrelse
+    sns.boxplot(data=df, x='month', y='PM10', palette='Blues', fliersize=3)  # Boxplot med fargepalett
+    plt.title("Boxplot av månedlige PM10-nivå (μg/m³)", fontsize=14)  # Tittel for plottet
+    plt.xlabel("Måned", fontsize=12)  # Etikett for x-aksen
+    plt.ylabel("PM10-nivå (μg/m³)", fontsize=12)  # Etikett for y-aksen
+    plt.tight_layout()  # Justerer layout for å unngå overlapp mellom elementer
+    plt.show()  # Viser plottet

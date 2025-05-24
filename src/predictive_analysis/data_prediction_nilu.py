@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -21,8 +22,8 @@ def load_and_prepare_nilu_data(file_path):
     # Konverter 'dateTime' til datetime-format
     df['dateTime'] = pd.to_datetime(df['dateTime'])
     
-    # Fjern rader med manglende verdier for de relevante komponentene
-    df = df.dropna(subset=['NO2', 'PM10', 'PM2.5'])
+    # Fjern rader med manglende verdier for de relevante komponentene og dateTime
+    df = df.dropna(subset=['dateTime', 'NO2', 'PM10', 'PM2.5'])
     
     # Returner sorterte data
     return df.sort_values('dateTime')
@@ -99,14 +100,15 @@ def plot_nilu_with_regression_and_prediction(df, components, years=5):
     axes[0].legend(loc='upper right')
     plt.show()
 
-def main_nilu_prediction(file_path):
+def main_nilu_prediction(path):
     """
     Hovedfunksjon for NILU-data med prediktiv analyse.
     
     Args:
-        file_path (str): Stien til JSON-filen med NILU-data.
+        project_root (str): Stien til prosjektets rot-mappe.
     """
     # Last inn og forbered data
+    file_path = os.path.join(path, 'data', 'clean', 'cleaned_data_nilu.json')
     df = load_and_prepare_nilu_data(file_path)
     
     # Komponenter som skal analyseres
@@ -117,6 +119,8 @@ def main_nilu_prediction(file_path):
 
 # Hvordan bruke funksjonen i andre filer:
 '''
-file_path = 'data/clean/cleaned_data_nilu.json'
-main_nilu_prediction(file_path)
+project_root = '/path/to/project'
+main_nilu_prediction(project_root)
 '''
+if __name__ == "__main__":
+    main_nilu_prediction('')

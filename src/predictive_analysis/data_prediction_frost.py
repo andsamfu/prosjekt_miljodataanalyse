@@ -220,7 +220,7 @@ def plot_predictions(df_train, df_future, future_df, y_pred_extended):
     plt.tight_layout()
     plt.show()
 
-def main(db_path, end_year=2024):
+def main_frost_prediciton(path, end_year=2024):
     """
     Hovedfunksjon for å kjøre hele funksjonaliteten.
 
@@ -228,7 +228,8 @@ def main(db_path, end_year=2024):
         db_path (str): Stien til SQLite-databasen.
         end_year (int): Året prediksjonen skal stoppe (inkludert).
     """
-    df = load_data(db_path)
+    path_file = os.path.join(path, 'data', 'clean', 'frost.db')
+    df = load_data(path_file)
     df = preprocess_data(df)
     df_train, df_future = split_data(df)
     future_df = create_future_features(df_future, end_year=end_year)
@@ -246,6 +247,4 @@ def main(db_path, end_year=2024):
     plot_predictions(df_train, df_future, future_df, y_pred_extended)
 
 if __name__ == "__main__":
-    db_path = os.path.join('data', 'clean', 'frost.db')
-    main(db_path, end_year=2024)
-
+    main_frost_prediciton('', 2024)

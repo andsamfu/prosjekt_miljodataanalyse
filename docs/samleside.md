@@ -34,7 +34,7 @@ Dette er en samleside som gir en samlet oversikt over alle hoveddeler av prosjek
 
 | Dokument | Beskrivelse |
 |----------|-------------|
-| [Refleksjonsnotat](./ki/ki_erklæring.md) | Erklæring om bruk av kunstig intelligens i prosjektet |
+| [Refleksjonsnotat](refleksjonsnotat.md) | Refleksjon rundt læring, samarbeid og tekniske valg i prosjektet. |
 | [Bruken av Git i prosjektet](git_bruk.md) | Vår refleksjon rundt bruk av Git, issues og branching |
 
 

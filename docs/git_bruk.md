@@ -36,6 +36,16 @@ Vi opplevde også merge conflicts når to personer hadde jobbet parallelt med sa
 ###  Mer bevissthet rundt git-historikk
 Etter hvert har vi blitt mer bevisste på hvordan vi bruker commit-meldinger, branch-navn og pull requests til å dokumentere prosessen. Dette har gjort det enklere å navigere i prosjektet og finne tilbake til tidligere beslutninger.
 
+###  Vi burde brukt en `dev`-branch
+
+Underveis i prosjektet innså vi at det kunne vært en fordel å ha en egen `dev`-branch som alt arbeid kunne merges inn i før det eventuelt ble lagt til `main`. Vi valgte å ikke endre arbeidsflyten midt i prosjektet, siden det allerede fungerte greit, men hadde vi startet på nytt, ville vi implementert dette.
+
+En `dev`-gren kunne fungert som en trygg mellomstasjon for å samle og teste endringer før de slippes til `main`. Dette ville gjort det enklere å sikre at `main` alltid inneholder kjørbar og stabil kode, og redusert risikoen for feil ved ferdigstilling.
+
+Vi har lært at en `dev`-branch gir bedre struktur, mer forutsigbarhet i samarbeid, og er nyttig når man jobber på tvers av flere features eller personer.
+
+
+
 ---
 
 ## 🧠 Oppsummert

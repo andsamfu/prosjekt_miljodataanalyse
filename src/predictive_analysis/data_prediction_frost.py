@@ -242,7 +242,7 @@ def main_frost_prediciton(path, end_year=2024):
     y_pred_extended = model.predict(X_future_extended)
 
     mse, r2, _ = evaluate_model(model, df_future[['DayOfYear', 'Month', 'sin_day', 'cos_day']], df_future['mean_air_temperature'])
-    print(f"Modellens ytelse::\nMean Squared Error: {mse:.2f}\nR² Score: {r2:.2f}")
+    print(f"Modellens ytelse:\nMean Squared Error: {mse:.2f}\nR² Score: {r2:.2f}")
 
     plot_predictions(df_train, df_future, future_df, y_pred_extended)
 

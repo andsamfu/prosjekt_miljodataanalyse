@@ -7,7 +7,7 @@ def plot_seasonal_weather_from_sqlite(db_path: str, table_name: str = "weather_d
     Leser værdata fra SQLite og visualiserer sesongvis utvikling av temperatur, nedbør og vindhastighet.
 
     Parametre:
-    - db_path (str): Filsti til SQLite-database (f.eks. 'data/clean/frost.db')
+    - db_path (str): Filsti til SQLite-database (f.eks. 'data/clean/cleaned_data_frost.db')
     - table_name (str): Navn på tabellen i databasen (default: 'weather_data')
     """
 

@@ -55,20 +55,24 @@ Hver fase er dokumentert i sin egen Jupyter-notebook. All funksjonell logikk er 
 │   ├── predictive_analysis/        # Prediktive modeller og visualisering
 │   └── README.md                  
 │
-├── docs/                           # Refleksjon, KI-deklarasjoner, samleside
-│   ├── answer/
-│   ├── KI-deklarasjon/
-│   └── samleside.md
+├── docs/                           
+│   ├── answer/                     # Svar på oppgaver
+│   ├── ki-deklarasjon/             # KI deklarasjoner
+│   ├── git_bruk.md                 # Hvordan vi har brukt git
+│   ├── refleksjonsnotat.md         # Refleksjonsnotat
+│   └── samleside.md                # Samleside med linking til alt
 │
 ├── resources/                      # Bilder av ulike visualiseringer
 │   └── images/
 │
 ├── requirements/                   # Bibliotekavhengigheter
 │   ├── requirements_macOS.txt
-│   └── requirements_windows.txt
+│   ├── requirements_windows.txt
+│   └── README.md
 │
 ├── .gitignore                      # Utelater filer fra versjonskontroll
 ├── .env                            # API-nøkler (lokal bruk)
+├── release_notes.md
 └── README.md
 ```
 

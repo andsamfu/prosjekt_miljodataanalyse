@@ -90,18 +90,42 @@ cd miljodataanalyse
 ```
 
 2. Lag et virtuelt miljø og aktiver det:
+
+Mac og Linux
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+Windows
 ```bash
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+venv\Scripts\activate
 ```
 
-3. Installer nødvendige biblioteker:
+Om du får feilmelding på windows kjør kommandoen under, og prøv kommandoen over igjen:
 ```bash
-pip install -r requirements_macOS.txt  #Windows: requierments_windows.txt
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
+3. Oppdater pip til nyeste versjon (test opp til versjon 25.1.1)
+```bash
+python.exe -m pip install --upgrade pip
+```
 
-👉 Gå videre til [notebooken for datainnsamling og rensing](notebooks/00_project_setup.ipynb) for å sette i gang.
+4. Installer nødvendige biblioteker:
+
+Mac og Linux
+```bash
+pip install -r requirements_macOS.txt
+```
+
+Windows
+```bash
+pip install -r requierments_windows.txt
+```
+
+### [Videre til datainnsamling](notebooks/00_project_setup.ipynb) 
 
 
 

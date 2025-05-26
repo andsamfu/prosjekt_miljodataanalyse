@@ -12,44 +12,55 @@ else:
     # Når skriptet importeres som modul
     from .data_validators import *
 
-def print_dataset_info(df_cleaned, outlier_results, imputation_results):
+def print_dataset_info(df_cleaned, missing_results, outlier_results, gap_results, imputation_results):
     """
     Skriver ut informasjon om datasettet i ønsket format.
 
     Args:
         df_cleaned (pd.DataFrame): Den rensede DataFrame.
+        missing_results (dict): Informasjon om manglende verdier.
         outlier_results (dict): Informasjon om fjernede outliers.
+        gap_results (list): Informasjon om datohull.
         imputation_results (dict): Informasjon om genererte verdier.
 
     Returns:
         dict: Informasjon om datasettet.
-    """
-    # Antall rader i datasettet
+    """    # Antall rader i datasettet
     total_rows = len(df_cleaned)
 
     # Teller antall outliers som er fjernet for hver kolonne
     outliers_count = {col: len(counts) for col, counts in outlier_results.items()}
 
     # Teller antall genererte verdier per kolonne
-    generated_counts = {col: int(imputation_results.get(col, 0)) for col in df_cleaned.columns if col.startswith('generated_')}
+    generated_counts = {col: int(df_cleaned[col].sum()) for col in df_cleaned.columns if col.startswith('generated_')}
 
     # Utskrift i ønsket format
-    print("\nDataset informasjon:")
-    print(f"Antall rader i datasettet: {total_rows}\n")
+    print(f"Antall rader i datasettet: {total_rows}")
 
-    print("Antall outliers fjernet per verdi:")
-    for col, count in outliers_count.items():
-        print(f"  - {col}: {count} outliers fjernet")
+    # Bruk validator rapport-metodene for å vise resultater
+    # 1. Manglende verdier
+    missing_validator = MissingValueValidator()
+    missing_validator.report(missing_results)
 
-    print("\nGenererte verdier:")
-    for col, count in generated_counts.items():
-        print(f"  - {col}: {count} genererte verdier")
+    # 2. Outliers 
+    outlier_validator = OutlierValidator({})  # Trenger ikke ranges for rapport
+    outlier_validator.report(outlier_results)
+
+    # 3. Datohull
+    continuity_validator = DateContinuityValidator()
+    continuity_validator.report(gap_results)
+
+    # 4. Genererte verdier
+    imputation_validator = ImputationValidator()
+    imputation_validator.report(imputation_results)
 
     print("\nData renset og lagret i SQLite-database.")
 
     return {
         "Antall rader": total_rows,
+        "Manglende verdier": missing_results,
         "Outliers fjernet per kolonne": outliers_count,
+        "Datohull": gap_results,
         "Genererte verdier per kolonne": generated_counts
     }
 
@@ -131,11 +142,9 @@ def clean_frost_data(json_file, db_file):
         imputation_results, df_cleaned = imputation_validator.validate(df_cleaned)
     except Exception as e:
         print(f"Feil under validering av data: {e}")
-        return
-
-    # Skriv ut dataset-informasjon
+        return    # Skriv ut dataset-informasjon
     try:
-        print_dataset_info(df_cleaned, outlier_results, imputation_results)
+        print_dataset_info(df_cleaned, missing_results, outlier_results, gap_results, imputation_results)
     except Exception as e:
         print(f"Feil under utskrift av dataset-informasjon: {e}")
         return

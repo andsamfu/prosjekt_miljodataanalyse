@@ -27,6 +27,7 @@ Dette er en samleside som gir en samlet oversikt over alle hoveddeler av prosjek
 | [README – src/](../src/README.md) | Forklarer oppbygging og ansvar for modulene i kildekoden |
 | [README – data/](../data/README.md) | Beskriver hvordan datasett lagres og håndteres |
 | [README – test/](../test/README.md) | Oversikt over enhetstester som sikrer kvalitet i koden |
+| [README – requirements/](../requirements/README.md) | Inneholder liste over nødvendige Python-pakker for å kjøre prosjektet og hvordan installere |
 | [Mer om KNN imputasjon](../notebooks/KNN_imputation.ipynb) | Tester og sammenligner ulike metoder for imputasjon |
 
 ---

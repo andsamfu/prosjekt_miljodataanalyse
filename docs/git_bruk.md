@@ -52,3 +52,4 @@ Vi har lært at en `dev`-branch gir bedre struktur, mer forutsigbarhet i samarbe
 
 Git har vært en viktig del av prosjektet vårt – ikke bare for versjonskontroll, men som et samarbeidsverktøy. Vi har lært hvordan man organiserer arbeidet, hvordan man unngår konflikter, og hvordan man bruker issues og pull requests til å skape struktur og trygghet i utviklingsarbeidet. 
 
+### [**Til samlesiden**](../docs/samleside.md)

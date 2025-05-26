@@ -204,14 +204,46 @@ def main_dc_nilu():
     """
     Hovedfunksjonen som kjører alle funksjonene for datarensing.
     """
-    data = load_json(raw_json_file)  # Laster inn rådata fra JSON-fil
-    
-    df_all = build_dataframe(data)  # Bygger en DataFrame fra rådata
-    df_pivot, outliers_removed = clean_data(df_all, column_to_remove, 4, 100)  # Renser dataen
-    dataset_info = print_dataset_info(df_pivot, outliers_removed)  # Skriver ut informasjon om datasettet
-    save_cleaned_data(df_pivot, cleaned_json_file)  # Lagrer den rensede dataen
+    try:
+        # Laster inn rådata fra JSON-fil
+        data = load_json(raw_json_file)
+    except Exception as e:
+        print(f"Feil ved innlasting av JSON-fil: {e}")
+        return
+
+    try:
+        # Bygger en DataFrame fra rådata
+        df_all = build_dataframe(data)
+    except Exception as e:
+        print(f"Feil ved bygging av DataFrame: {e}")
+        return
+
+    try:
+        # Renser dataen
+        df_pivot, outliers_removed = clean_data(df_all, column_to_remove, 4, 100)
+    except Exception as e:
+        print(f"Feil under datarensing: {e}")
+        return
+
+    try:
+        # Skriver ut informasjon om datasettet
+        dataset_info = print_dataset_info(df_pivot, outliers_removed)
+    except Exception as e:
+        print(f"Feil ved utskrift av dataset-informasjon: {e}")
+        return
+
+    try:
+        # Lagrer den rensede dataen
+        save_cleaned_data(df_pivot, cleaned_json_file)
+    except Exception as e:
+        print(f"Feil ved lagring av renset data: {e}")
+        return
+
     print("\nData rensing fullført")
 
 # Kjører hovedfunksjonen
 if __name__ == "__main__":
-    main_dc_nilu()
+    try:
+        main_dc_nilu()
+    except Exception as e:
+        print(f"En uventet feil oppstod: {e}")

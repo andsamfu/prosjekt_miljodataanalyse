@@ -12,6 +12,47 @@ else:
     # Når skriptet importeres som modul
     from .data_validators import *
 
+def print_dataset_info(df_cleaned, outlier_results, imputation_results):
+    """
+    Skriver ut informasjon om datasettet i ønsket format.
+
+    Args:
+        df_cleaned (pd.DataFrame): Den rensede DataFrame.
+        outlier_results (dict): Informasjon om fjernede outliers.
+        imputation_results (dict): Informasjon om genererte verdier.
+
+    Returns:
+        dict: Informasjon om datasettet.
+    """
+    # Antall rader i datasettet
+    total_rows = len(df_cleaned)
+
+    # Teller antall outliers som er fjernet for hver kolonne
+    outliers_count = {col: len(counts) for col, counts in outlier_results.items()}
+
+    # Teller antall genererte verdier per kolonne
+    generated_counts = {col: int(imputation_results.get(col, 0)) for col in df_cleaned.columns if col.startswith('generated_')}
+
+    # Utskrift i ønsket format
+    print("\nDataset informasjon:")
+    print(f"Antall rader i datasettet: {total_rows}\n")
+
+    print("Antall outliers fjernet per verdi:")
+    for col, count in outliers_count.items():
+        print(f"  - {col}: {count} outliers fjernet")
+
+    print("\nGenererte verdier:")
+    for col, count in generated_counts.items():
+        print(f"  - {col}: {count} genererte verdier")
+
+    print("\nData renset og lagret i SQLite-database.")
+
+    return {
+        "Antall rader": total_rows,
+        "Outliers fjernet per kolonne": outliers_count,
+        "Genererte verdier per kolonne": generated_counts
+    }
+
 def clean_frost_data(json_file, db_file):
     """
     Renser og validerer værdata fra FROST API, og lagrer resultatet i en SQLite-database.
@@ -67,19 +108,18 @@ def clean_frost_data(json_file, db_file):
 
     # 1. Sjekk for manglende verdier
     missing_results, df_cleaned = missing_validator.validate(df_pivot)
-    missing_validator.report(missing_results)
 
     # 2. Sjekk og håndter uteliggere
     outlier_results, df_cleaned = outlier_validator.validate(df_cleaned)
-    outlier_validator.report(outlier_results)
 
     # 3. Sjekk og håndter datokontinuitet
     gap_results, df_cleaned = continuity_validator.validate(df_cleaned)
-    continuity_validator.report(gap_results)
 
     # 4. Imputer manglende verdier
     imputation_results, df_cleaned = imputation_validator.validate(df_cleaned)
-    imputation_validator.report(imputation_results)
+
+    # Skriv ut dataset-informasjon
+    print_dataset_info(df_cleaned, outlier_results, imputation_results)
 
     # Lagre de rensede dataene i en SQLite-database
     os.makedirs(os.path.dirname(db_file), exist_ok=True)

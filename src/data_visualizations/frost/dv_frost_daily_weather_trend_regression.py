@@ -3,9 +3,9 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import sqlite3
 
-def plot_weather_components(db_path="data/clean/frost.db"):
+def plot_weather_components(db_path="data/clean/cleaned_data_frost.db"):
     """
-    Leser inn værdata fra frost.db og visualiserer utviklingen i temperatur, nedbør og vindhastighet.
+    Leser inn værdata fra cleaned_data_frost.db og visualiserer utviklingen i temperatur, nedbør og vindhastighet.
     
     Parametere:
     -----------

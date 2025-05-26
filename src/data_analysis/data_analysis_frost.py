@@ -98,7 +98,7 @@ def main():
     - Utfører statistiske analyser
     - Skriver ut og lagrer resultater
     """
-    DB_FILE = 'data/clean/frost.db'  # Filsti til frost-database
+    DB_FILE = 'data/clean/cleaned_data_frost.db'  # Filsti til frost-database
     OUTPUT_DIR = 'data/analyses_results'  # Katalog for lagring av resultater
     COLUMNS_TO_ANALYZE = [
         'mean_air_temperature',

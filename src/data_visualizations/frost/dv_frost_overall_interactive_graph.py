@@ -2,7 +2,7 @@ import sqlite3
 import pandas as pd
 import plotly.graph_objects as go
 
-def plot_weather_data(db_path="data/clean/frost.db"):
+def plot_weather_data(db_path="data/clean/cleaned_data_frost.db"):
     """
     Visualiserer værdata fra en SQLite-database ved hjelp av Plotly.
 

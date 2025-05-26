@@ -26,7 +26,7 @@ Eksempler:
 Her ligger de rensede datasettene som brukes videre i analyse og modellering:
 
 - `cleaned_data_nilu.json` – NILU-data etter outlier-håndtering og KNN-imputasjon
-- `frost.db` – Frost-data i strukturert SQLite-format etter filtrering og rensing
+- `cleaned_data_frost.db` – Frost-data i strukturert SQLite-format etter filtrering og rensing
 
 Rensingen er dokumentert med valg og metode i `01_data_cleaning.ipynb`. 
 

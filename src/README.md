@@ -63,9 +63,11 @@ Alt som handler om prediktive modeller og visuell fremstilling av fremtidsscenar
 Modulene i `src/` brukes direkte i prosjektets notebooks, f.eks.:
 
 ```python
-from data_visualizations.dataframes import build_dataframe_from_json, build_dataframe_from_db
-from data_cleaning.data_cleaning_nilu import load_and_clean_data_nilu
+from data_visualizations import *
+from data_cleaning import *
 ```
+
+Vi har brukt `__init__.py` filer for at det skal være mye lettere å importere moduler. Dette hjelper veldig når man har en modul som henter inn en annen modul.
 
 ---
 

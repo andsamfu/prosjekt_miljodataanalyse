@@ -9,7 +9,7 @@ sys.path.append(os.path.join(project_root, 'src'))
 import pandas as pd
 import json
 import sqlite3
-from data_visualizations.nilu import get_cleaned_data_path  # Importer funksjonen
+from data_visualizations.data_visualizations_nilu import get_cleaned_data_path  # Importer funksjonen
 
 # Juster Pandas' utskriftsinnstillinger
 pd.set_option('display.max_columns', None)  # Vis alle kolonner

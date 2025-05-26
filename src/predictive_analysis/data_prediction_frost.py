@@ -228,7 +228,7 @@ def main_frost_prediciton(path, end_year=2024):
         db_path (str): Stien til SQLite-databasen.
         end_year (int): Året prediksjonen skal stoppe (inkludert).
     """
-    path_file = os.path.join(path, 'data', 'clean', 'frost.db')
+    path_file = os.path.join(path, 'data', 'clean', 'cleaned_data_frost.db')
     df = load_data(path_file)
     df = preprocess_data(df)
     df_train, df_future = split_data(df)

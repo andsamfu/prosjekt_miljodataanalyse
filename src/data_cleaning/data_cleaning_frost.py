@@ -136,10 +136,9 @@ def default_clean_frost_data(project_root):
 
     Args:
         project_root (str): Rotmappe for prosjektet.
-    """
-    # Sett opp filstier relativt til prosjektets rotmappe
+    """    # Sett opp filstier relativt til prosjektets rotmappe
     json_file = os.path.join(project_root, 'data', 'raw', 'api_frost_weather.json')
-    db_file = os.path.join(project_root, 'data', 'clean', 'frost.db')
+    db_file = os.path.join(project_root, 'data', 'clean', 'cleaned_data_frost.db')
     clean_frost_data(json_file, db_file)
 
 # Kjør skriptet direkte

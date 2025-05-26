@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import calendar
 import numpy as np
 
-def show_percipitation(db_path="data/clean/frost.db"):
+def show_percipitation(db_path="data/clean/cleaned_data_frost.db"):
     """
     Visualiserer gjennomsnittlig daglig nedbør per måned med standardavvik som feilmarginer.
 

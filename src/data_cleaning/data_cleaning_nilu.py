@@ -33,7 +33,6 @@ def load_json(file_path):
     try:
         with open(file_path, 'r') as file:
             data = json.load(file)
-        print("\nJSON-filen ble lastet vellykket.\n")
         return data
     except FileNotFoundError:
         print(f"Filen '{file_path}' ble ikke funnet.")
@@ -72,7 +71,7 @@ def clean_data(df_all, column_to_remove, num_std, n_neighbors):
         n_neighbors (int): Antall naboer for KNN-imputasjon.
 
     Returns:
-        tuple: En tuple med den rensede DataFrame og informasjon om fjernede outliers.
+        tuple: En tuple med den rensede DataFrame og alle validering resultater.
     """
     # Konverterer 'dateTime' til datetime-format
     df_all['dateTime'] = pd.to_datetime(df_all['dateTime'])
@@ -83,61 +82,83 @@ def clean_data(df_all, column_to_remove, num_std, n_neighbors):
     # Lager en pivot-tabell
     df_pivot = df_all.pivot_table(index='dateTime', columns='component', values='value')
     df_pivot = df_pivot.reset_index()  # Beholder 'dateTime' som en kolonne
-    df_pivot['referenceTime'] = df_pivot['dateTime']  # Kopierer 'dateTime' til 'referenceTime'
-
-    # Fjerner spesifisert kolonne
+    df_pivot['referenceTime'] = df_pivot['dateTime']  # Kopierer 'dateTime' til 'referenceTime'    # Fjerner spesifisert kolonne
     if column_to_remove in df_pivot.columns:
         df_pivot.drop(columns=[column_to_remove], inplace=True)
 
-    # Fyller inn manglende datoer ved hjelp av DateContinuityValidator
-    date_validator = DateContinuityValidator()
-    missing_dates, df_pivot = date_validator.validate(df_pivot, date_column='referenceTime')
+    # Initialiser validatorer
+    missing_validator = MissingValueValidator()  # Validator for manglende verdier
+    outlier_validator = OutlierValidator({})  # Midlertidig, oppdateres under
+    continuity_validator = DateContinuityValidator()  # Validator for datokontinuitet
+    imputation_validator = ImputationValidator(n_neighbors=n_neighbors)  # Validator for imputasjon
 
-    # Fjerner outliers ved hjelp av OutlierValidator
+    # 1. Sjekk for manglende verdier
+    missing_results, df_pivot = missing_validator.validate(df_pivot)
+
+    # 2. Fyller inn manglende datoer ved hjelp av DateContinuityValidator
+    gap_results, df_pivot = continuity_validator.validate(df_pivot, date_column='referenceTime')
+
+    # 3. Fjerner outliers ved hjelp av OutlierValidator
     valid_ranges = {col: (df_pivot[col].mean() - num_std * df_pivot[col].std(),
                           df_pivot[col].mean() + num_std * df_pivot[col].std()) for col in df_pivot.columns if col not in ['dateTime', 'referenceTime']}
     outlier_validator = OutlierValidator(valid_ranges)
-    outliers_removed, df_pivot = outlier_validator.validate(df_pivot)
+    outlier_results, df_pivot = outlier_validator.validate(df_pivot)
 
-    # Fyller inn manglende verdier ved hjelp av ImputationValidator
-    imputation_validator = ImputationValidator(n_neighbors=n_neighbors)
-    imputation_info, df_pivot = imputation_validator.validate(df_pivot)
+    # 4. Fyller inn manglende verdier ved hjelp av ImputationValidator
+    imputation_results, df_pivot = imputation_validator.validate(df_pivot)
 
-    return df_pivot, outliers_removed
+    return df_pivot, missing_results, outlier_results, gap_results, imputation_results
 
-def print_dataset_info(df_pivot, outliers_removed):
+def print_dataset_info(df_cleaned, missing_results, outlier_results, gap_results, imputation_results):
     """
-    Skriver ut informasjon om datasettet.
+    Skriver ut informasjon om datasettet i ønsket format.
 
     Args:
-        df_pivot (pd.DataFrame): Den rensede DataFrame.
-        outliers_removed (dict): Informasjon om fjernede outliers.
+        df_cleaned (pd.DataFrame): Den rensede DataFrame.
+        missing_results (dict): Informasjon om manglende verdier.
+        outlier_results (dict): Informasjon om fjernede outliers.
+        gap_results (list): Informasjon om datohull.
+        imputation_results (dict): Informasjon om genererte verdier.
 
     Returns:
         dict: Informasjon om datasettet.
     """
-    generated_counts = {col: int(df_pivot[col].sum()) for col in df_pivot.columns if col.startswith('generated_')}
-    
+    # Antall rader i datasettet
+    total_rows = len(df_cleaned)
+
     # Teller antall outliers som er fjernet for hver kolonne
-    outliers_count = {col: len(counts) for col, counts in outliers_removed.items()}
-    
-    info = {
-        "Antall rader": len(df_pivot),
-        "Genererte verdier per kolonne": generated_counts,
-        "Outliers fjernet per kolonne": outliers_count
+    outliers_count = {col: len(counts) for col, counts in outlier_results.items()}
+
+    # Teller antall genererte verdier per kolonne
+    generated_counts = {col: int(df_cleaned[col].sum()) for col in df_cleaned.columns if col.startswith('generated_')}
+
+    # Utskrift i ønsket format
+    print(f"Antall rader i datasettet: {total_rows}")
+
+    # Bruk validator rapport-metodene for å vise resultater
+    # 1. Manglende verdier
+    missing_validator = MissingValueValidator()
+    missing_validator.report(missing_results)
+
+    # 2. Outliers 
+    outlier_validator = OutlierValidator({})  # Trenger ikke ranges for rapport
+    outlier_validator.report(outlier_results)
+
+    # 3. Datohull
+    continuity_validator = DateContinuityValidator()
+    continuity_validator.report(gap_results)
+
+    # 4. Genererte verdier
+    imputation_validator = ImputationValidator()
+    imputation_validator.report(imputation_results)
+
+    return {
+        "Antall rader": total_rows,
+        "Manglende verdier": missing_results,
+        "Outliers fjernet per kolonne": outliers_count,
+        "Datohull": gap_results,
+        "Genererte verdier per kolonne": generated_counts
     }
-
-    print("Dataset informasjon:\n")
-    print(f"Antall rader i datasettet: {info['Antall rader']}")
-    print("\nAntall outliers fjernet per verdi:")
-    for col, count in info["Outliers fjernet per kolonne"].items():
-        print(f"  - {col}: {count} outliers fjernet")
-    print("\nGenererte verdier:")
-    for col, count in info["Genererte verdier per kolonne"].items():
-        print(f"  - {col}: {count} genererte verdier")
-   
-
-    return info
 
 def save_cleaned_data(df_pivot, file_path):
     """
@@ -220,14 +241,14 @@ def main_dc_nilu():
 
     try:
         # Renser dataen
-        df_pivot, outliers_removed = clean_data(df_all, column_to_remove, 4, 100)
+        df_pivot, missing_results, outlier_results, gap_results, imputation_results = clean_data(df_all, column_to_remove, 4, 100)
     except Exception as e:
         print(f"Feil under datarensing: {e}")
         return
 
     try:
         # Skriver ut informasjon om datasettet
-        dataset_info = print_dataset_info(df_pivot, outliers_removed)
+        dataset_info = print_dataset_info(df_pivot, missing_results, outlier_results, gap_results, imputation_results)
     except Exception as e:
         print(f"Feil ved utskrift av dataset-informasjon: {e}")
         return

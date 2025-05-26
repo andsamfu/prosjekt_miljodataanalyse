@@ -3,6 +3,10 @@ import numpy as np
 from datetime import timedelta
 from sklearn.impute import KNNImputer
 
+# Juster Pandas' utskriftsinnstillinger
+pd.set_option('display.max_columns', None)  # Vis alle kolonner
+pd.set_option('display.width', 1000)       # Øk bredden på utskriften
+
 class MissingValueValidator:
     """
     Klasse for å validere og håndtere manglende verdier i en DataFrame.
@@ -35,16 +39,42 @@ class MissingValueValidator:
         Args:
             results (dict): Ordbok med kolonner og deres manglende verdier.
         """
-        if results:
-            print("\nManglende verdier oppdaget:")
-            for column, missing_df in results.items():
-                print(f"{column}:")
-                dates = pd.to_datetime(missing_df['referenceTime'])
-                yearly_counts = dates.dt.year.value_counts().sort_index()
-                for year, count in yearly_counts.items():
-                    print(f"- {year}: {count}")
-        else:
+        if not results:
             print("\nIngen manglende verdier oppdaget")
+            return
+
+        print("\nManglende verdier oppdaget:")
+        
+        all_data = []
+        for attribute, missing_df in results.items():
+            if not missing_df.empty and 'referenceTime' in missing_df.columns:
+                # Ensure 'referenceTime' is in datetime format
+                dates = pd.to_datetime(missing_df['referenceTime'])
+                yearly_counts = dates.dt.year.value_counts()
+                for year, count in yearly_counts.items():
+                    all_data.append({'Attribute': attribute, 'Year': year, 'Count': count})
+            elif not missing_df.empty:
+                print(f"Advarsel: 'referenceTime'-kolonnen mangler for attributt '{attribute}' i missing_df.")
+
+        if not all_data:
+            # This case might occur if results is not empty, but all missing_df are empty or lack 'referenceTime'
+            print("Ingen tellbare manglende verdier funnet med 'referenceTime'.")
+            return
+
+        report_df = pd.DataFrame(all_data)
+        
+        # Pivot to get Attributes as rows, Years as columns, and Count as values
+        pivot_df = report_df.pivot_table(index='Attribute', columns='Year', values='Count', fill_value=0)
+        
+        # Ensure years are sorted in columns
+        if not pivot_df.empty:
+            pivot_df = pivot_df.sort_index(axis=1)
+            
+            # Convert counts to integer and replace 0 with "ok"
+            for year_col in pivot_df.columns:
+                pivot_df[year_col] = pivot_df[year_col].apply(lambda x: "ok" if int(x) == 0 else int(x))
+        
+        print(pivot_df)
 
 class OutlierValidator:
     """
@@ -93,15 +123,38 @@ class OutlierValidator:
         Args:
             results (dict): Ordbok med outliers.
         """
-        if results:
-            print("\nOutliers oppdaget:")
-            for column, values in results.items():
-                print(f"{column}:")
-                yearly_counts = values.groupby(values.index.year).size()
-                for year, count in sorted(yearly_counts.items()):
-                    print(f"- {year}: {count}")
-        else:
+        if not results:
             print("\nIngen outliers oppdaget")
+            return
+
+        print("\nOutliers oppdaget:")
+        
+        all_data = []
+        for attribute, series_of_outliers in results.items():
+            if not series_of_outliers.empty:
+                # The index of the series is already datetime-like from the validate method
+                yearly_counts = series_of_outliers.groupby(series_of_outliers.index.year).size()
+                for year, count in yearly_counts.items():
+                    all_data.append({'Attribute': attribute, 'Year': year, 'Count': count})
+            # It's possible an attribute in results might have an empty series if all values were valid
+            # or became NaN for other reasons before outlier check for that specific attribute.
+
+        if not all_data:
+            print("Ingen tellbare outliers funnet med årsdata.")
+            return
+
+        report_df = pd.DataFrame(all_data)
+        
+        # Pivot to get Attributes as rows, Years as columns, and Count as values
+        pivot_df = report_df.pivot_table(index='Attribute', columns='Year', values='Count', fill_value=0)
+        
+        # Ensure years are sorted in columns and format output
+        if not pivot_df.empty:
+            pivot_df = pivot_df.sort_index(axis=1)
+            for year_col in pivot_df.columns:
+                pivot_df[year_col] = pivot_df[year_col].apply(lambda x: "ok" if int(x) == 0 else int(x))
+        
+        print(pivot_df)
 
 class DateContinuityValidator:
     """
@@ -142,20 +195,46 @@ class DateContinuityValidator:
         Genererer en rapport over manglende datoer.
 
         Args:
-            results (list): Liste over manglende datoer.
+            results (list): Liste over manglende datoer (som strenger).
         """
         if not results:
             print("\nIngen datohull oppdaget")
             return
 
         print("\nDatohull oppdaget:")
-        gaps_by_year = {}
-        for date in results:
-            year = pd.to_datetime(date).year
-            gaps_by_year[year] = gaps_by_year.get(year, 0) + 1
         
-        for year, count in sorted(gaps_by_year.items()):
-            print(f"- {year}: {count}")
+        gaps_by_year = {}
+        for date_str in results:
+            try:
+                year = pd.to_datetime(date_str).year
+                gaps_by_year[year] = gaps_by_year.get(year, 0) + 1
+            except ValueError:
+                print(f"Advarsel: Kunne ikke parse dato '{date_str}'")
+                continue
+
+        if not gaps_by_year:
+            print("Ingen gyldige årsdata for datohull funnet.")
+            return
+
+        # Konverter til DataFrame med år som kolonner
+        # Lag en liste av dictionaries for DataFrame-konstruksjon, der hver dict er en rad
+        # Her vil vi ha en enkelt rad DataFrame der kolonnene er år.
+        report_df = pd.DataFrame([gaps_by_year])
+        
+        if report_df.empty:
+            # Dette burde ikke skje hvis gaps_by_year ikke er tomt, men som en sikkerhet
+            print("Kunne ikke generere rapport for datohull.")
+            return
+
+        # Gi indeksen et meningsfylt navn
+        report_df.index = ["Antall"]
+        
+        # Sorter kolonner (år) og formater verdier
+        report_df = report_df.sort_index(axis=1)
+        for year_col in report_df.columns:
+            report_df[year_col] = report_df[year_col].apply(lambda x: "ok" if int(x) == 0 else int(x))
+        
+        print(report_df)
 
 class ImputationValidator:
     """

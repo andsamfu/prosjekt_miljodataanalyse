@@ -1,5 +1,5 @@
 # 🧪 Testoversikt
-Dette er testmappen for datavalidering av værdata. Testene er implementert ved hjelp av Pythons innebygde unittest-rammeverk og følger beste praksis for testing.
+Dette er testmappen for datavalidering av værdata. Testene er implementert ved hjelp av Pythons unittest-rammeverk og følger beste praksis for testing. Det er laget 15 tester, og ved kjøring går alle 15 testene igjennom med 'OK'.
 
 ## 📋 Teststruktur
 Testene er organisert i fire hovedklasser som tilsvarer de fire valideringsklassene i `data_validators.py`:

@@ -40,6 +40,13 @@ Dette er en samleside som gir en samlet oversikt over alle hoveddeler av prosjek
 | [Bruken av Git i prosjektet](git_bruk.md) | Vår refleksjon rundt bruk av Git, issues og branching |
 
 
+## 🌐 Tilgang til GitHub-repositoriet
+
+| Lenke | Beskrivelse |
+|-------|-------------|
+| [GitHub repo for prosjektet](https://github.com/andsamfu/prosjekt_miljodataanalyse) | Hele prosjektet ligger tilgjengelig på GitHub med all kode, dokumentasjon og historikk |
+
+
 
 
 
